@@ -99,5 +99,7 @@
  "Waypoints: %lld": "Міток: %lld",
  "When full": "Коли заповниться",
  "Yes": "Так",
- "≈ %lld h of logging": "≈ %lld год запису"
+ "≈ %lld h of logging": "≈ %lld год запису",
+ "Color by speed": "Колір за швидкістю",
+ "Track color": "Колір треку"
 }

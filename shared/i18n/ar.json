@@ -99,5 +99,7 @@
  "Waypoints: %lld": "العلامات: %lld",
  "When full": "عند الامتلاء",
  "Yes": "نعم",
- "≈ %lld h of logging": "≈ %lld ساعة من التسجيل"
+ "≈ %lld h of logging": "≈ %lld ساعة من التسجيل",
+ "Color by speed": "اللون حسب السرعة",
+ "Track color": "لون المسار"
 }

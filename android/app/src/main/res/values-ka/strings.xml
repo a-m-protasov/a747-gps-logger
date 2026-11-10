@@ -98,6 +98,8 @@
     <string name="when_full">როცა შეივსება</string>
     <string name="yes">დიახ</string>
     <string name="about_n_h_of_logging">≈ %1$d სთ ჩაწერა</string>
+    <string name="color_by_speed">ფერი სიჩქარის მიხედვით</string>
+    <string name="track_color">ტრეკის ფერი</string>
     <string name="turn_the_logger_on_and_connect_it_with_a_usb_otg">ჩართეთ ლოგერი და შეაერთეთ USB OTG კაბელით ან დააწყვილეთ Bluetooth-ით.</string>
     <string name="connect_by_usb">USB-ით დაკავშირება</string>
     <string name="connect_by_bluetooth">Bluetooth-ით დაკავშირება</string>

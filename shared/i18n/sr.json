@@ -99,5 +99,7 @@
  "Waypoints: %lld": "Ознака: %lld",
  "When full": "Када се напуни",
  "Yes": "Да",
- "≈ %lld h of logging": "≈ %lld h записивања"
+ "≈ %lld h of logging": "≈ %lld h записивања",
+ "Color by speed": "Боја према брзини",
+ "Track color": "Боја трасе"
 }

@@ -98,6 +98,8 @@
     <string name="when_full">عند الامتلاء</string>
     <string name="yes">نعم</string>
     <string name="about_n_h_of_logging">≈ %1$d ساعة من التسجيل</string>
+    <string name="color_by_speed">اللون حسب السرعة</string>
+    <string name="track_color">لون المسار</string>
     <string name="turn_the_logger_on_and_connect_it_with_a_usb_otg">شغّل المسجّل ووصّله بكبل USB OTG أو اقرنه عبر البلوتوث.</string>
     <string name="connect_by_usb">الاتصال عبر USB</string>
     <string name="connect_by_bluetooth">الاتصال عبر البلوتوث</string>

@@ -99,5 +99,7 @@
  "Waypoints: %lld": "वेपॉइंट: %lld",
  "When full": "भर जाने पर",
  "Yes": "हाँ",
- "≈ %lld h of logging": "≈ %lld घंटे की रिकॉर्डिंग"
+ "≈ %lld h of logging": "≈ %lld घंटे की रिकॉर्डिंग",
+ "Color by speed": "गति के अनुसार रंग",
+ "Track color": "ट्रैक का रंग"
 }

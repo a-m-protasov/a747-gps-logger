@@ -98,6 +98,8 @@
     <string name="when_full">Када се напуни</string>
     <string name="yes">Да</string>
     <string name="about_n_h_of_logging">≈ %1$d h записивања</string>
+    <string name="color_by_speed">Боја према брзини</string>
+    <string name="track_color">Боја трасе</string>
     <string name="turn_the_logger_on_and_connect_it_with_a_usb_otg">Укључите логер и повежите га USB OTG каблом или упарите преко Bluetooth-а.</string>
     <string name="connect_by_usb">Повежи преко USB-а</string>
     <string name="connect_by_bluetooth">Повежи преко Bluetooth-а</string>

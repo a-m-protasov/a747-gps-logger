@@ -101,9 +101,16 @@ struct SettingsView: View {
     @AppStorage("units") private var units = UnitSystem.system.rawValue
     @AppStorage("splitGapMinutes") private var gap = 30
     @AppStorage("showWaypointsOnTrack") private var showWaypoints = false
+    @AppStorage("trackColorBySpeed") private var bySpeed = true
+    @AppStorage("trackColor") private var trackColor = "#1F8A70"
 
     var body: some View {
         Form {
+            Toggle("Color by speed", isOn: $bySpeed)
+            ColorPicker("Track color", selection: Binding(
+                get: { Color(hex: trackColor) },
+                set: { trackColor = $0.hex }), supportsOpacity: false)
+                .disabled(bySpeed)
             Picker("Units", selection: $units) {
                 ForEach(UnitSystem.allCases) { Text($0.title).tag($0.rawValue) }
             }
@@ -119,5 +126,17 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .frame(width: 460)
         .padding(.vertical, 8)
+    }
+}
+
+extension Color {
+    init(hex: String) {
+        let v = UInt32(hex.trimmingCharacters(in: CharacterSet(charactersIn: "#")), radix: 16) ?? 0x1F8A70
+        self.init(red: Double((v >> 16) & 0xFF) / 255, green: Double((v >> 8) & 0xFF) / 255, blue: Double(v & 0xFF) / 255)
+    }
+
+    var hex: String {
+        guard let c = NSColor(self).usingColorSpace(.sRGB) else { return "#1F8A70" }
+        return String(format: "#%02X%02X%02X", Int(c.redComponent * 255), Int(c.greenComponent * 255), Int(c.blueComponent * 255))
     }
 }

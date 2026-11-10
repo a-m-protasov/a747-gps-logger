@@ -21,7 +21,7 @@ PH = re.compile(r"%(?:lld|@|%|g|d)")
 def load_translations():
     out = {}
     for fn in sorted(os.listdir(os.path.dirname(__file__))):
-        if fn.startswith("tr_") and fn.endswith(".py") and fn != "tr_android.py":
+        if fn.startswith("tr_") and fn.endswith(".py") and fn not in ("tr_android.py", "tr_extra.py"):
             spec = importlib.util.spec_from_file_location(fn[:-3], os.path.join(os.path.dirname(__file__), fn))
             mod = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(mod)
@@ -29,8 +29,20 @@ def load_translations():
     return out
 
 
+def load_extra():
+    spec = importlib.util.spec_from_file_location("tr_extra", os.path.join(os.path.dirname(__file__), "tr_extra.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.T
+
+
 def main():
-    keys = list(json.load(open(os.path.join(I18N, "en.json"))))
+    extra = load_extra()
+    en = json.load(open(os.path.join(I18N, "en.json")))
+    for k in extra:  # extras are appended to the source list
+        en.setdefault(k, k)
+    json.dump(en, open(os.path.join(I18N, "en.json"), "w"), ensure_ascii=False, indent=1)
+    keys = [k for k in en if k not in extra]
     langs = load_translations()
     errors = 0
     for lang, items in langs.items():
@@ -42,20 +54,28 @@ def main():
             if sorted(PH.findall(k)) != sorted(PH.findall(v)):
                 print(f"{lang}: placeholders differ\n  {k}\n  {v}")
                 errors += 1
-        json.dump(dict(zip(keys, items)), open(os.path.join(I18N, f"{lang}.json"), "w"),
-                  ensure_ascii=False, indent=1)
+        out = dict(zip(keys, items))
+        for k, tr in extra.items():
+            if lang not in tr or sorted(PH.findall(k)) != sorted(PH.findall(tr[lang])):
+                print(f"{lang}: missing or bad extra string: {k}")
+                errors += 1
+            else:
+                out[k] = tr[lang]
+        json.dump(out, open(os.path.join(I18N, f"{lang}.json"), "w"), ensure_ascii=False, indent=1)
     if errors:
         sys.exit(f"{errors} problems")
 
     cat = json.load(open(CATALOG))
-    for k in keys:
+    for k in keys + list(extra):
         entry = cat["strings"].setdefault(k, {})
+        entry.pop("shouldTranslate", None)
         locs = entry.setdefault("localizations", {})
         for lang, items in langs.items():
-            locs[lang] = {"stringUnit": {"state": "translated", "value": items[keys.index(k)]}}
+            v = extra[k][lang] if k in extra else items[keys.index(k)]
+            locs[lang] = {"stringUnit": {"state": "translated", "value": v}}
     # strings that need no translation
     for k in cat["strings"]:
-        if k not in keys:
+        if k not in keys and k not in extra:
             cat["strings"][k]["shouldTranslate"] = False
     json.dump(cat, open(CATALOG, "w"), ensure_ascii=False, indent=2, sort_keys=True)
     print(f"{len(langs)} languages × {len(keys)} strings")

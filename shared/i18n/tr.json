@@ -99,5 +99,7 @@
  "Waypoints: %lld": "İşaretler: %lld",
  "When full": "Dolunca",
  "Yes": "Evet",
- "≈ %lld h of logging": "≈ %lld sa kayıt"
+ "≈ %lld h of logging": "≈ %lld sa kayıt",
+ "Color by speed": "Hıza göre renk",
+ "Track color": "Rota rengi"
 }

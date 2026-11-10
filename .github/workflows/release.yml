@@ -15,7 +15,7 @@ jobs:
       - name: Build DMG
         run: tools/release/build-dmg.sh "${GITHUB_REF_NAME#v}"
       - uses: actions/upload-artifact@v4
-        with: { name: dmg, path: macos/build/*.dmg }
+        with: { name: dmg, path: macos/build.noindex/*.dmg }
 
   apk:
     runs-on: ubuntu-latest

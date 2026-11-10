@@ -99,5 +99,7 @@
  "Waypoints: %lld": "Punkty orientacyjne: %lld",
  "When full": "Gdy pełna",
  "Yes": "Tak",
- "≈ %lld h of logging": "≈ %lld h zapisu"
+ "≈ %lld h of logging": "≈ %lld h zapisu",
+ "Color by speed": "Kolor według prędkości",
+ "Track color": "Kolor śladu"
 }

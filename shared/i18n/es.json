@@ -99,5 +99,7 @@
  "Waypoints: %lld": "Waypoints: %lld",
  "When full": "Al llenarse",
  "Yes": "Sí",
- "≈ %lld h of logging": "≈ %lld h de registro"
+ "≈ %lld h of logging": "≈ %lld h de registro",
+ "Color by speed": "Color según la velocidad",
+ "Track color": "Color de la ruta"
 }

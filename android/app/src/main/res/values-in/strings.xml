@@ -98,6 +98,8 @@
     <string name="when_full">Saat penuh</string>
     <string name="yes">Ya</string>
     <string name="about_n_h_of_logging">≈ %1$d jam perekaman</string>
+    <string name="color_by_speed">Warna menurut kecepatan</string>
+    <string name="track_color">Warna trek</string>
     <string name="turn_the_logger_on_and_connect_it_with_a_usb_otg">Nyalakan logger dan hubungkan dengan kabel USB OTG, atau sandingkan lewat Bluetooth.</string>
     <string name="connect_by_usb">Hubungkan lewat USB</string>
     <string name="connect_by_bluetooth">Hubungkan lewat Bluetooth</string>

@@ -100,6 +100,8 @@ fun InfoRow(title: String, value: String) {
 
 /** UI formatting (localized, unlike exports). */
 object UI {
+    val isMetric: Boolean get() = metric
+
     private val metric: Boolean
         get() = when (A747App.repo.units) {
             "metric" -> true
@@ -144,19 +146,27 @@ object UI {
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun MapWeb(tracks: List<List<LogPoint>>, waypoints: List<Waypoint>, modifier: Modifier = Modifier) {
+    val repo = A747App.repo
+    val metric = UI.isMetric
     val data = JSONObject().apply {
         put("tracks", JSONArray().apply {
             for (t in tracks) {
+                val speeds = speeds(t)
                 val step = maxOf(1, t.size / 3000)
-                put(JSONArray().apply {
-                    for (i in t.indices step step) put(JSONArray().put(t[i].lon).put(t[i].lat))
-                    put(JSONArray().put(t.last().lon).put(t.last().lat))
-                })
+                val idx = (t.indices step step).toMutableList().apply { if (last() != t.size - 1) add(t.size - 1) }
+                put(JSONObject()
+                    .put("c", JSONArray().apply { for (i in idx) put(JSONArray().put(t[i].lon).put(t[i].lat)) })
+                    .put("s", JSONArray().apply { for (i in idx) put(Math.round(speeds[i] * 10) / 10.0) }))
             }
         })
         put("waypoints", JSONArray().apply {
             for (w in waypoints) put(JSONObject().put("lon", w.point.lon).put("lat", w.point.lat).put("name", w.name))
         })
+        put("style", JSONObject()
+            .put("mode", if (repo.trackColorBySpeed) "speed" else "solid")
+            .put("color", repo.trackColor)
+            .put("unit", if (metric) "km/h" else "mph")
+            .put("factor", if (metric) 1.0 else 1 / 1.609344))
     }.toString()
     AndroidView(
         modifier = modifier,
@@ -223,3 +233,9 @@ fun MiniChart(values: List<Double>, color: Color, fill: Boolean, modifier: Modif
 }
 
 fun openUrl(ctx: Context, url: String) = ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+
+/** Speed at each point in km/h: the logged value, or derived from the previous point. */
+fun speeds(t: List<LogPoint>): DoubleArray = DoubleArray(t.size) { i ->
+    t[i].speed ?: if (i > 0 && t[i].utc > t[i - 1].utc)
+        io.github.a_m_protasov.a747.core.Tracks.haversine(t[i - 1], t[i]) / (t[i].utc - t[i - 1].utc) * 3.6 else 0.0
+}

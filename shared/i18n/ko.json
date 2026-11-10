@@ -99,5 +99,7 @@
  "Waypoints: %lld": "웨이포인트: %lld",
  "When full": "가득 차면",
  "Yes": "예",
- "≈ %lld h of logging": "약 %lld시간 기록 가능"
+ "≈ %lld h of logging": "약 %lld시간 기록 가능",
+ "Color by speed": "속도별 색상",
+ "Track color": "트랙 색상"
 }

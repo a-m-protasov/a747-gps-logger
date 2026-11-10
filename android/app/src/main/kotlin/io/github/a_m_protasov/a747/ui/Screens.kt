@@ -548,6 +548,8 @@ private fun SettingsScreen(onBack: () -> Unit) {
     var units by remember { mutableStateOf(repo.units) }
     var gap by remember { mutableIntStateOf(repo.splitGapMinutes) }
     var showWpts by remember { mutableStateOf(repo.showWaypointsOnTrack) }
+    var bySpeed by remember { mutableStateOf(repo.trackColorBySpeed) }
+    var color by remember { mutableStateOf(repo.trackColor) }
     val ctx = LocalContext.current
     Scaffold(topBar = {
         TopAppBar(title = { Text(stringResource(R.string.settings)) },
@@ -569,6 +571,27 @@ private fun SettingsScreen(onBack: () -> Unit) {
                         onValueChangeFinished = { repo.splitGapMinutes = gap }, valueRange = 5f..240f)
                 },
             )
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.color_by_speed)) },
+                trailingContent = { Switch(bySpeed, onCheckedChange = { bySpeed = it; repo.trackColorBySpeed = it }) },
+            )
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.track_color)) },
+                supportingContent = {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 8.dp)) {
+                        for (hex in listOf("#1F8A70", "#2F6BFF", "#F2994A", "#E5484D", "#8E4EC6", "#222222")) {
+                            val c = Color(android.graphics.Color.parseColor(hex))
+                            Box(
+                                Modifier.size(32.dp).background(c.copy(alpha = if (bySpeed) 0.35f else 1f), CircleShape)
+                                    .then(if (hex == color && !bySpeed) Modifier.padding(3.dp).background(Color.White, CircleShape)
+                                        .padding(3.dp).background(c, CircleShape) else Modifier)
+                                    .clickable(enabled = !bySpeed) { color = hex; repo.trackColor = hex },
+                            )
+                        }
+                    }
+                },
+            )
+            HorizontalDivider()
             ListItem(
                 headlineContent = { Text(stringResource(R.string.show_waypoints_on_track_maps)) },
                 trailingContent = { Switch(showWpts, onCheckedChange = { showWpts = it; repo.showWaypointsOnTrack = it }) },

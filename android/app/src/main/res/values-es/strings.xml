@@ -98,6 +98,8 @@
     <string name="when_full">Al llenarse</string>
     <string name="yes">Sí</string>
     <string name="about_n_h_of_logging">≈ %1$d h de registro</string>
+    <string name="color_by_speed">Color según la velocidad</string>
+    <string name="track_color">Color de la ruta</string>
     <string name="turn_the_logger_on_and_connect_it_with_a_usb_otg">Enciende el registrador y conéctalo con un cable USB OTG o vincúlalo por Bluetooth.</string>
     <string name="connect_by_usb">Conectar por USB</string>
     <string name="connect_by_bluetooth">Conectar por Bluetooth</string>

@@ -99,5 +99,7 @@
  "Waypoints: %lld": "Белгілер: %lld",
  "When full": "Толғанда",
  "Yes": "Иә",
- "≈ %lld h of logging": "≈ %lld сағ жазу"
+ "≈ %lld h of logging": "≈ %lld сағ жазу",
+ "Color by speed": "Жылдамдық бойынша түс",
+ "Track color": "Трек түсі"
 }

@@ -99,5 +99,7 @@
  "Waypoints: %lld": "ნიშნულები: %lld",
  "When full": "როცა შეივსება",
  "Yes": "დიახ",
- "≈ %lld h of logging": "≈ %lld სთ ჩაწერა"
+ "≈ %lld h of logging": "≈ %lld სთ ჩაწერა",
+ "Color by speed": "ფერი სიჩქარის მიხედვით",
+ "Track color": "ტრეკის ფერი"
 }

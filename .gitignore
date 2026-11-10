@@ -16,6 +16,7 @@ android/local.properties
 *.jks
 # Xcode
 macos/build/
+macos/build.noindex/
 DerivedData/
 xcuserdata/
 *.xcuserstate
@@ -24,6 +25,7 @@ __pycache__/
 .build/
 .swiftpm/
 macos/build/
+macos/build.noindex/
 macos/A747.xcodeproj/
 android/.kotlin/
 android/build/

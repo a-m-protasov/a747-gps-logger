@@ -99,6 +99,8 @@
     <string name="when_full">When full</string>
     <string name="yes">Yes</string>
     <string name="about_n_h_of_logging">≈ %1$d h of logging</string>
+    <string name="color_by_speed">Color by speed</string>
+    <string name="track_color">Track color</string>
     <string name="turn_the_logger_on_and_connect_it_with_a_usb_otg">Turn the logger on and connect it with a USB OTG cable, or pair it over Bluetooth.</string>
     <string name="connect_by_usb">Connect by USB</string>
     <string name="connect_by_bluetooth">Connect by Bluetooth</string>

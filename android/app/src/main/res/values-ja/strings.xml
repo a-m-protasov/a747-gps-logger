@@ -98,6 +98,8 @@
     <string name="when_full">満杯時</string>
     <string name="yes">はい</string>
     <string name="about_n_h_of_logging">約%1$d時間記録可能</string>
+    <string name="color_by_speed">速度で色分け</string>
+    <string name="track_color">トラックの色</string>
     <string name="turn_the_logger_on_and_connect_it_with_a_usb_otg">ロガーの電源を入れ、USB OTGケーブルで接続するかBluetoothでペアリングしてください。</string>
     <string name="connect_by_usb">USBで接続</string>
     <string name="connect_by_bluetooth">Bluetoothで接続</string>

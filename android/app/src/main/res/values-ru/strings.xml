@@ -98,6 +98,8 @@
     <string name="when_full">Когда заполнится</string>
     <string name="yes">Да</string>
     <string name="about_n_h_of_logging">≈ %1$d ч записи</string>
+    <string name="color_by_speed">Цвет по скорости</string>
+    <string name="track_color">Цвет трека</string>
     <string name="turn_the_logger_on_and_connect_it_with_a_usb_otg">Включите логгер и подключите его кабелем USB OTG или по Bluetooth.</string>
     <string name="connect_by_usb">Подключить по USB</string>
     <string name="connect_by_bluetooth">Подключить по Bluetooth</string>

@@ -99,5 +99,7 @@
  "Waypoints: %lld": "ウェイポイント：%lld",
  "When full": "満杯時",
  "Yes": "はい",
- "≈ %lld h of logging": "約%lld時間記録可能"
+ "≈ %lld h of logging": "約%lld時間記録可能",
+ "Color by speed": "速度で色分け",
+ "Track color": "トラックの色"
 }

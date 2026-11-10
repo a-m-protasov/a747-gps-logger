@@ -98,6 +98,8 @@
     <string name="when_full">Une fois plein</string>
     <string name="yes">Oui</string>
     <string name="about_n_h_of_logging">≈ %1$d h d’enregistrement</string>
+    <string name="color_by_speed">Couleur selon la vitesse</string>
+    <string name="track_color">Couleur du parcours</string>
     <string name="turn_the_logger_on_and_connect_it_with_a_usb_otg">Allumez l’enregistreur et branchez-le avec un câble USB OTG, ou associez-le en Bluetooth.</string>
     <string name="connect_by_usb">Connecter en USB</string>
     <string name="connect_by_bluetooth">Connecter en Bluetooth</string>

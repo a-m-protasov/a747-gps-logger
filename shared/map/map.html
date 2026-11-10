@@ -14,10 +14,17 @@
   .wpt { width: 14px; height: 14px; border-radius: 50%; background: #F2994A;
          border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.4); }
   .maplibregl-ctrl-attrib { font: 11px -apple-system, Roboto, sans-serif; }
+  #legend { position: absolute; right: 10px; bottom: 34px; display: none; align-items: center; gap: 6px;
+            padding: 4px 8px; border-radius: 8px; background: rgba(255,255,255,.85);
+            font: 11px -apple-system, Roboto, sans-serif; color: #333; }
+  #legend .bar { width: 70px; height: 6px; border-radius: 3px;
+                 background: linear-gradient(90deg, hsl(0,85%,47%), hsl(60,85%,47%), hsl(120,85%,37%)); }
+  @media (prefers-color-scheme: dark) { #legend { background: rgba(30,30,32,.85); color: #ddd; } }
 </style>
 </head>
 <body>
 <div id="map"></div>
+<div id="legend"><span id="lmin"></span><span class="bar"></span><span id="lmax"></span></div>
 <script>
 const dark = matchMedia('(prefers-color-scheme: dark)').matches;
 const map = new maplibregl.Map({
@@ -28,15 +35,47 @@ const map = new maplibregl.Map({
 map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
 map.addControl(new maplibregl.ScaleControl(), 'bottom-left');
 
-let pending = null, markers = [];
+let pending = null, markers = [], ranges = [];
 const ACCENT = '#1F8A70';
+
+/** Red (slowest) to green (fastest) for t in 0..1. */
+const speedColor = t => `hsl(${Math.round(120 * t)}, 85%, ${Math.round(47 - 10 * t)}%)`;
+
+/**
+ * Line features for one track. By speed: the track is cut into short pieces, each coloured by
+ * its mean speed relative to the track's own min..max (pieces smooth out GPS noise).
+ */
+function trackFeatures(t, style) {
+  const c = Array.isArray(t) ? t : t.c;
+  const sp = Array.isArray(t) ? null : t.s;
+  if (style.mode !== 'speed' || !sp || sp.length !== c.length || c.length < 3) {
+    return [{ type: 'Feature', properties: { color: style.color || ACCENT },
+              geometry: { type: 'LineString', coordinates: c } }];
+  }
+  const step = Math.max(2, Math.round(c.length / 300));
+  const pieces = [];
+  for (let i = 0; i < c.length - 1; i += step) {
+    const j = Math.min(c.length - 1, i + step);
+    let sum = 0;
+    for (let k = i; k <= j; k++) sum += sp[k];
+    pieces.push({ from: i, to: j, v: sum / (j - i + 1) });
+  }
+  const vs = pieces.map(p => p.v);
+  const lo = Math.min(...vs), hi = Math.max(...vs);
+  ranges.push([lo, hi]);
+  return pieces.map(p => ({
+    type: 'Feature',
+    properties: { color: speedColor(hi - lo < 0.5 ? 1 : (p.v - lo) / (hi - lo)) },
+    geometry: { type: 'LineString', coordinates: c.slice(p.from, p.to + 1) },
+  }));
+}
 
 function apply(d) {
   for (const m of markers) m.remove();
   markers = [];
-  const features = (d.tracks || []).map(t => ({
-    type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: t },
-  }));
+  const style = d.style || { mode: 'solid', color: ACCENT };
+  ranges = [];
+  const features = (d.tracks || []).flatMap(t => trackFeatures(t, style));
   const src = map.getSource('tracks');
   const data = { type: 'FeatureCollection', features };
   if (src) src.setData(data); else {
@@ -46,8 +85,15 @@ function apply(d) {
       paint: { 'line-color': '#ffffff', 'line-width': 7, 'line-opacity': 0.9 } });
     map.addLayer({ id: 'tracks', type: 'line', source: 'tracks',
       layout: { 'line-join': 'round', 'line-cap': 'round' },
-      paint: { 'line-color': ACCENT, 'line-width': 4 } });
+      paint: { 'line-color': ['get', 'color'], 'line-width': 4 } });
   }
+  const legend = document.getElementById('legend');
+  if (style.mode === 'speed' && ranges.length === 1 && style.unit) {
+    const f = v => Math.round(v * (style.factor || 1)) + ' ' + style.unit;
+    document.getElementById('lmin').textContent = f(ranges[0][0]);
+    document.getElementById('lmax').textContent = f(ranges[0][1]);
+    legend.style.display = 'flex';
+  } else legend.style.display = 'none';
   for (const w of d.waypoints || []) {
     const el = document.createElement('div'); el.className = 'wpt';
     markers.push(new maplibregl.Marker({ element: el })
@@ -62,7 +108,11 @@ function apply(d) {
   }
 }
 
-// Called by the app: setData({tracks: [[[lon, lat], ...], ...], waypoints: [{lon, lat, name}]})
+// Called by the app:
+// setData({tracks: [{c: [[lon, lat], ...], s: [kmh, ...]}, ...] (or plain coordinate arrays),
+//          waypoints: [{lon, lat, name}],
+//          style: {mode: 'speed' | 'solid', color: '#RRGGBB', unit: 'km/h', factor: 1}})
+// The legend (one track, by speed) shows the slowest and fastest piece in `unit` (km/h × factor).
 window.setData = d => { if (map.isStyleLoaded()) apply(d); else pending = d; };
 map.on('load', () => { if (pending) { apply(pending); pending = null; } });
 map.on('error', e => console.log('map error: ' + (e && e.error ? e.error.message : e)));

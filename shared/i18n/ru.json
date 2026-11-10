@@ -99,5 +99,7 @@
  "Waypoints: %lld": "Меток: %lld",
  "When full": "Когда заполнится",
  "Yes": "Да",
- "≈ %lld h of logging": "≈ %lld ч записи"
+ "≈ %lld h of logging": "≈ %lld ч записи",
+ "Color by speed": "Цвет по скорости",
+ "Track color": "Цвет трека"
 }

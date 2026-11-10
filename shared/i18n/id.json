@@ -99,5 +99,7 @@
  "Waypoints: %lld": "Waypoint: %lld",
  "When full": "Saat penuh",
  "Yes": "Ya",
- "≈ %lld h of logging": "≈ %lld jam perekaman"
+ "≈ %lld h of logging": "≈ %lld jam perekaman",
+ "Color by speed": "Warna menurut kecepatan",
+ "Track color": "Warna trek"
 }

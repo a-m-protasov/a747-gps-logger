@@ -98,6 +98,8 @@
     <string name="when_full">Коли заповниться</string>
     <string name="yes">Так</string>
     <string name="about_n_h_of_logging">≈ %1$d год запису</string>
+    <string name="color_by_speed">Колір за швидкістю</string>
+    <string name="track_color">Колір треку</string>
     <string name="turn_the_logger_on_and_connect_it_with_a_usb_otg">Увімкніть логер і під’єднайте його кабелем USB OTG або через Bluetooth.</string>
     <string name="connect_by_usb">Під’єднати через USB</string>
     <string name="connect_by_bluetooth">Під’єднати через Bluetooth</string>

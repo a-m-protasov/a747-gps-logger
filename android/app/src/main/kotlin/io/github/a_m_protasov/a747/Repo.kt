@@ -68,6 +68,12 @@ class Repo(private val ctx: Context) {
     var units: String
         get() = prefs.getString("units", "system")!!
         set(v) { prefs.edit().putString("units", v).apply() }
+    var trackColorBySpeed: Boolean
+        get() = prefs.getBoolean("trackColorBySpeed", true)
+        set(v) { prefs.edit().putBoolean("trackColorBySpeed", v).apply() }
+    var trackColor: String
+        get() = prefs.getString("trackColor", "#1F8A70")!!
+        set(v) { prefs.edit().putString("trackColor", v).apply() }
     var showWaypointsOnTrack: Boolean
         get() = prefs.getBoolean("showWaypointsOnTrack", false)
         set(v) { prefs.edit().putBoolean("showWaypointsOnTrack", v).apply() }
