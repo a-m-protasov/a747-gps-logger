@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- TranSystem i-Blue 747A+ (MTK GPS Receiver) -->
+    <usb-device vendor-id="3725" product-id="13097" />
+</resources>

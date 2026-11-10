@@ -1,0 +1,53 @@
+{
+  "flash_size": 4194304,
+  "points": 2600,
+  "waypoints": 2,
+  "corrupt": 1,
+  "dropped_no_fix": 1,
+  "dropped_bad_time": 0,
+  "duplicates": 1,
+  "tracks": [
+    {
+      "id": "1777619520-300",
+      "start_utc": 1777619520,
+      "end_utc": 1777620423,
+      "points": 300,
+      "distance_m": 8129.2,
+      "duration_s": 903,
+      "moving_s": 903,
+      "avg_speed_kmh": 32.4,
+      "max_speed_kmh": 36.0,
+      "ascent_m": 64.7,
+      "descent_m": 38.6,
+      "name": "2026-05-01 08:12"
+    },
+    {
+      "id": "1777627626-400",
+      "start_utc": 1777627626,
+      "end_utc": 1777628823,
+      "points": 400,
+      "distance_m": 8697.9,
+      "duration_s": 1197,
+      "moving_s": 1197,
+      "avg_speed_kmh": 26.2,
+      "max_speed_kmh": 36.0,
+      "ascent_m": 35.4,
+      "descent_m": 59.4,
+      "name": "2026-05-01 10:27"
+    },
+    {
+      "id": "1777761600-1900",
+      "start_utc": 1777761600,
+      "end_utc": 1777767297,
+      "points": 1900,
+      "distance_m": 40446.3,
+      "duration_s": 5697,
+      "moving_s": 5697,
+      "avg_speed_kmh": 25.6,
+      "max_speed_kmh": 36.0,
+      "ascent_m": 246.7,
+      "descent_m": 224.6,
+      "name": "2026-05-02 23:40"
+    }
+  ]
+}

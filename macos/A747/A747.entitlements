@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- No App Sandbox: inside the sandbox IOUSBHostInterface fails with kIOReturnInternalError
+	     even with com.apple.security.device.usb (tested on macOS 27.2). The app is distributed
+	     outside the Mac App Store, so the sandbox is not required. Hardened runtime stays on. -->
+	<key>com.apple.security.device.usb</key><true/>
+</dict>
+</plist>

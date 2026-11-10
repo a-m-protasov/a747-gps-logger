@@ -1,0 +1,33 @@
+# Never commit real logger data
+*.gpx
+*.kml
+*.csv
+*.bin
+!fixtures/**
+!shared/timezones.bin
+
+.DS_Store
+# Android
+android/.gradle/
+android/build/
+android/**/build/
+android/local.properties
+*.keystore
+*.jks
+# Xcode
+macos/build/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+.venv/
+__pycache__/
+.build/
+.swiftpm/
+macos/build/
+macos/A747.xcodeproj/
+android/.kotlin/
+android/build/
+android/local.properties
+android/app/build/
+android/core/build/
+android/.gradle/

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#27A383"/>
+      <stop offset="1" stop-color="#0F5C4A"/>
+    </linearGradient>
+    <linearGradient id="dev" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4A4D52"/>
+      <stop offset="1" stop-color="#2A2C30"/>
+    </linearGradient>
+    <filter id="sh" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#bg)"/>
+  <!-- contour lines -->
+  <g fill="none" stroke="#ffffff" stroke-opacity="0.10" stroke-width="6">
+    <path d="M100 330 C 300 260, 420 420, 620 340 S 860 260, 924 300"/>
+    <path d="M100 470 C 280 400, 440 560, 640 470 S 860 400, 924 440"/>
+    <path d="M100 760 C 300 700, 460 840, 660 760 S 860 700, 924 740"/>
+  </g>
+  <!-- track -->
+  <path d="M230 760 C 300 640, 420 700, 470 600 S 420 420, 560 380 S 760 420, 790 270"
+        fill="none" stroke="#ffffff" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="230" cy="760" r="34" fill="#ffffff"/>
+  <circle cx="230" cy="760" r="16" fill="#1F8A70"/>
+  <!-- waypoint -->
+  <g transform="translate(790 270)">
+    <path d="M0 0 C -60 -70, -70 -120, 0 -150 C 70 -120, 60 -70, 0 0 Z" fill="#F2994A" filter="url(#sh)"/>
+    <circle cx="0" cy="-100" r="22" fill="#ffffff"/>
+  </g>
+  <!-- logger -->
+  <g transform="translate(520 560) rotate(-12)" filter="url(#sh)">
+    <rect x="0" y="0" width="230" height="330" rx="46" fill="#17181A"/>
+    <rect x="16" y="16" width="198" height="298" rx="34" fill="url(#dev)"/>
+    <circle cx="115" cy="210" r="24" fill="#17181A" stroke="#6B6F75" stroke-width="4"/>
+    <ellipse cx="115" cy="148" rx="11" ry="26" fill="#8BF26A"/>
+    <ellipse cx="172" cy="214" rx="26" ry="11" fill="#8BF26A"/>
+    <ellipse cx="62" cy="250" rx="22" ry="10" transform="rotate(-30 62 250)" fill="#8BF26A"/>
+  </g>
+</svg>

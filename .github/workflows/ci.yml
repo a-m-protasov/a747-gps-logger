@@ -1,0 +1,42 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  reference:
+    name: Reference and fixtures
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Golden files are up to date
+        run: python3 tools/gen_fixtures.py && git diff --exit-code fixtures/
+      - name: Translations are complete
+        run: python3 tools/i18n/build.py && python3 tools/i18n/android.py && git diff --exit-code
+
+  macos:
+    name: macOS core and app
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Core tests (fixtures)
+        run: cd macos/A747Core && swift test
+      - name: Build app
+        run: |
+          brew install xcodegen
+          cd macos && xcodegen generate --quiet
+          xcodebuild -project A747.xcodeproj -scheme A747 -configuration Debug CODE_SIGN_IDENTITY=- build -quiet
+
+  android:
+    name: Android core and app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21" }
+      # the runner image ships the Android SDK; AGP downloads the missing platform itself
+      - name: Core tests and debug build
+        run: cd android && ./gradlew :core:test :app:assembleDebug --no-daemon

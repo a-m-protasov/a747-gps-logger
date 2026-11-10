@@ -1,0 +1,55 @@
+name: Release
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  dmg:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install xcodegen
+      - name: Build DMG
+        run: tools/release/build-dmg.sh "${GITHUB_REF_NAME#v}"
+      - uses: actions/upload-artifact@v4
+        with: { name: dmg, path: macos/build/*.dmg }
+
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21" }
+      - name: Build signed APK
+        env:
+          A747_KEYSTORE_BASE64: ${{ secrets.A747_KEYSTORE_BASE64 }}
+          A747_KEYSTORE_PASSWORD: ${{ secrets.A747_KEYSTORE_PASSWORD }}
+        run: |
+          test -n "$A747_KEYSTORE_BASE64" || { echo "secret A747_KEYSTORE_BASE64 is missing"; exit 1; }
+          echo "$A747_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          export A747_KEYSTORE="$RUNNER_TEMP/release.jks" A747_KEY_ALIAS=a747 A747_KEY_PASSWORD="$A747_KEYSTORE_PASSWORD"
+          V="${GITHUB_REF_NAME#v}"
+          cd android && ./gradlew :app:assembleRelease --no-daemon -PversionName="$V"
+          cp app/build/outputs/apk/release/app-release.apk "../A747-GPS-Logger-$V.apk"
+      - uses: actions/upload-artifact@v4
+        with: { name: apk, path: "*.apk" }
+
+  publish:
+    needs: [dmg, apk]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { merge-multiple: true }
+      - name: Draft release
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          shasum -a 256 *.dmg *.apk > SHA256SUMS.txt
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" *.dmg *.apk SHA256SUMS.txt --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" *.dmg *.apk SHA256SUMS.txt --repo "$GITHUB_REPOSITORY" \
+              --draft --title "A747 GPS Logger ${GITHUB_REF_NAME}" --generate-notes
+          fi

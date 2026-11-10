@@ -1,0 +1,1 @@
+-keep class io.github.a_m_protasov.a747.ui.MapBridge { *; }

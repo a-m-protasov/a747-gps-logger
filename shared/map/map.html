@@ -1,0 +1,72 @@
+<!doctype html>
+<!-- Map page shared by the macOS and Android apps. Tiles: OpenFreeMap (no key). -->
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="maplibre-gl.css">
+<script src="maplibre-gl.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; background: #e9e7e2; }
+  /* absolute, not height:100%: Android WebView may lay the page out at 0 px height first */
+  #map { position: absolute; top: 0; right: 0; bottom: 0; left: 0; }
+  @media (prefers-color-scheme: dark) { html, body { background: #1c1c1e; } }
+  .wpt { width: 14px; height: 14px; border-radius: 50%; background: #F2994A;
+         border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.4); }
+  .maplibregl-ctrl-attrib { font: 11px -apple-system, Roboto, sans-serif; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+const map = new maplibregl.Map({
+  container: 'map',
+  style: 'https://tiles.openfreemap.org/styles/' + (dark ? 'dark' : 'liberty'),
+  center: [0, 20], zoom: 1, attributionControl: { compact: true },
+});
+map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+map.addControl(new maplibregl.ScaleControl(), 'bottom-left');
+
+let pending = null, markers = [];
+const ACCENT = '#1F8A70';
+
+function apply(d) {
+  for (const m of markers) m.remove();
+  markers = [];
+  const features = (d.tracks || []).map(t => ({
+    type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: t },
+  }));
+  const src = map.getSource('tracks');
+  const data = { type: 'FeatureCollection', features };
+  if (src) src.setData(data); else {
+    map.addSource('tracks', { type: 'geojson', data });
+    map.addLayer({ id: 'tracks-casing', type: 'line', source: 'tracks',
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: { 'line-color': '#ffffff', 'line-width': 7, 'line-opacity': 0.9 } });
+    map.addLayer({ id: 'tracks', type: 'line', source: 'tracks',
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: { 'line-color': ACCENT, 'line-width': 4 } });
+  }
+  for (const w of d.waypoints || []) {
+    const el = document.createElement('div'); el.className = 'wpt';
+    markers.push(new maplibregl.Marker({ element: el })
+      .setLngLat([w.lon, w.lat]).setPopup(new maplibregl.Popup({ offset: 10 }).setText(w.name))
+      .addTo(map));
+  }
+  const pts = features.flatMap(f => f.geometry.coordinates)
+    .concat((d.waypoints || []).map(w => [w.lon, w.lat]));
+  if (pts.length) {
+    const b = pts.reduce((b, p) => b.extend(p), new maplibregl.LngLatBounds(pts[0], pts[0]));
+    map.fitBounds(b, { padding: 40, maxZoom: 16, duration: 0 });
+  }
+}
+
+// Called by the app: setData({tracks: [[[lon, lat], ...], ...], waypoints: [{lon, lat, name}]})
+window.setData = d => { if (map.isStyleLoaded()) apply(d); else pending = d; };
+map.on('load', () => { if (pending) { apply(pending); pending = null; } });
+map.on('error', e => console.log('map error: ' + (e && e.error ? e.error.message : e)));
+addEventListener('resize', () => map.resize());
+</script>
+</body>
+</html>

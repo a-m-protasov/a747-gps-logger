@@ -1,0 +1,67 @@
+{
+  "flash_size": 262144,
+  "points": 5789,
+  "waypoints": 1,
+  "corrupt": 0,
+  "dropped_no_fix": 0,
+  "dropped_bad_time": 0,
+  "duplicates": 0,
+  "tracks": [
+    {
+      "id": "1786735533-1289",
+      "start_utc": 1786735533,
+      "end_utc": 1786739397,
+      "points": 1289,
+      "distance_m": 27179.2,
+      "duration_s": 3864,
+      "moving_s": 3864,
+      "avg_speed_kmh": 25.3,
+      "max_speed_kmh": 36.0,
+      "ascent_m": 139.9,
+      "descent_m": 174.0,
+      "name": "2026-08-14 23:25"
+    },
+    {
+      "id": "1786746600-1500",
+      "start_utc": 1786746600,
+      "end_utc": 1786751097,
+      "points": 1500,
+      "distance_m": 32396.5,
+      "duration_s": 4497,
+      "moving_s": 4497,
+      "avg_speed_kmh": 25.9,
+      "max_speed_kmh": 36.0,
+      "ascent_m": 179.0,
+      "descent_m": 199.0,
+      "name": "2026-08-15 02:30"
+    },
+    {
+      "id": "1786761900-1500",
+      "start_utc": 1786761900,
+      "end_utc": 1786766397,
+      "points": 1500,
+      "distance_m": 32396.5,
+      "duration_s": 4497,
+      "moving_s": 4497,
+      "avg_speed_kmh": 25.9,
+      "max_speed_kmh": 36.0,
+      "ascent_m": 179.0,
+      "descent_m": 199.0,
+      "name": "2026-08-15 06:45"
+    },
+    {
+      "id": "1786773600-1500",
+      "start_utc": 1786773600,
+      "end_utc": 1786778097,
+      "points": 1500,
+      "distance_m": 32396.5,
+      "duration_s": 4497,
+      "moving_s": 4497,
+      "avg_speed_kmh": 25.9,
+      "max_speed_kmh": 36.0,
+      "ascent_m": 179.0,
+      "descent_m": 199.0,
+      "name": "2026-08-15 10:00"
+    }
+  ]
+}
