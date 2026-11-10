@@ -29,7 +29,8 @@ struct A747App: App {
 
 enum SidebarSection: String, Hashable, CaseIterable, Identifiable {
     case device, tracks, waypoints
-    var id: String { rawValue }
+    // List(data, selection:) tags rows with `id`, so it must have the selection's type
+    var id: Self { self }
 
     var title: LocalizedStringKey {
         switch self {
