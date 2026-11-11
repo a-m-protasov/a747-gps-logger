@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.FileOpen
+import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Stop
@@ -72,6 +73,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedButton
@@ -527,7 +529,8 @@ private fun Empty(icon: androidx.compose.ui.graphics.vector.ImageVector, title: 
 
 // MARK: Map
 
-/** Any number of tracks and waypoints on one map, chosen with the checkboxes under it. */
+/** Any number of tracks and waypoints on one full-screen map, chosen in a sheet opened by a button. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MapScreen(items: List<Item>) {
     val repo = A747App.repo
@@ -535,14 +538,22 @@ private fun MapScreen(items: List<Item>) {
     fun show(v: Set<String>) { shown = v; repo.mapShown = v }
     val tracks = remember(items, shown) { items.filterIsInstance<Track>().filter { it.mapKey in shown }.map { it.points } }
     val wpts = remember(items, shown) { items.filterIsInstance<Waypoint>().filter { it.mapKey in shown } }
-    Column(Modifier.fillMaxSize()) {
-        Box(Modifier.fillMaxWidth().weight(2f)) {
-            MapWeb(tracks, wpts, Modifier.fillMaxSize())
-            RecordButton(Modifier.align(Alignment.BottomStart).padding(12.dp))
-        }
+    var picking by rememberSaveable { mutableStateOf(false) }
+    // the map takes the whole screen; what it shows is chosen in a sheet opened by the button
+    Box(Modifier.fillMaxSize()) {
+        MapWeb(tracks, wpts, Modifier.fillMaxSize())
+        RecordButton(Modifier.align(Alignment.BottomStart).padding(12.dp))
+        ExtendedFloatingActionButton(
+            onClick = { picking = true },
+            icon = { Icon(Icons.Filled.Layers, null) },
+            text = { Text(stringResource(R.string.tracks) + if (shown.isEmpty()) "" else " · ${tracks.size + wpts.size}") },
+            modifier = Modifier.align(Alignment.BottomEnd).padding(12.dp),
+        )
+    }
+    if (picking) ModalBottomSheet(onDismissRequest = { picking = false }) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
-                if (shown.isEmpty() || (tracks.isEmpty() && wpts.isEmpty())) stringResource(R.string.choose_tracks_and_waypoints_below_to_show_them_o) else "",
+                if (tracks.isEmpty() && wpts.isEmpty()) stringResource(R.string.choose_tracks_and_waypoints_below_to_show_them_o) else "",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.weight(1f).padding(start = 8.dp),
             )
@@ -550,7 +561,7 @@ private fun MapScreen(items: List<Item>) {
             TextButton(onClick = { show(emptySet()) }, enabled = shown.isNotEmpty()) { Text(stringResource(R.string.hide_all)) }
         }
         HorizontalDivider()
-        LazyColumn(Modifier.fillMaxWidth().weight(1f)) {
+        LazyColumn(Modifier.fillMaxWidth()) {
             for ((day, list) in items.groupBy { it.day }) {
                 item(key = "d$day") {
                     Text(UI.day(day), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,

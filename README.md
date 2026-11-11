@@ -82,7 +82,7 @@ These apps fix all of that and give you the tracks in common formats.
 - **Import**: GPX, KML (with times), CSV, NMEA and raw BIN dumps from other programs or other
   devices. Tracks and waypoints already in the library are skipped; names in the files are
   kept. On the Mac, files can also be dropped on the list.
-- **Map** (Android): any number of tracks and waypoints on one map, ticked in a list under it.
+- **Map** (Android): any number of tracks and waypoints on one map, full screen, ticked in a list that the Tracks button opens.
 - **Record on the phone** (Android): a track from the phone's own GPS, one point every
   1–60 s, running with the screen off. Start and stop it in the app, from the notification, or
   from [Tasker](#recording-from-tasker) and similar apps.

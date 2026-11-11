@@ -87,8 +87,8 @@ selected the right side shows the device.
   (`import-<utc>-<id>.csv`, `PointsFile` format) and is never split; deleting it deletes the
   file. A track with the same start and end as one in the library, or a waypoint at the same
   second, is skipped. Names in the file become user names unless they equal the default name.
-- **Map screen** (Android): the tracks and waypoints ticked in the list under the map are
-  shown together; the choice is remembered.
+- **Map screen** (Android): a full-screen map; the Tracks button opens a sheet
+  where tracks and waypoints are ticked to be shown together; the choice is remembered.
 - **Recording on the phone** (Android): a foreground location service writes GPS fixes
   (accuracy ≤ 100 m, one every 1–60 s, default 5) straight into `tracks/phone-<utc>.csv`.
   Started from the Map screen, stopped from there or the notification. Other apps (Tasker)
