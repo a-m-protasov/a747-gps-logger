@@ -2,6 +2,7 @@ package io.github.a_m_protasov.a747.ui
 
 import android.bluetooth.BluetoothDevice
 import android.content.Intent
+import android.provider.DocumentsContract
 import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -581,36 +582,71 @@ private enum class Format(val ext: String, val mime: String) {
     CSV("csv", "text/csv"), BIN("bin", "application/octet-stream"),
 }
 
+/** "a747-2026-11-08_17-33" plus the user's name, without characters file systems reject. */
+private fun fileName(item: Item): String {
+    var n = "a747-" + item.name.replace(" ", "_").replace(":", "-")
+    item.customName?.let { c -> n += " " + c.map { if (it in "/\\:*?\"<>|") '-' else it }.joinToString("").trim() }
+    return n
+}
+
 /**
- * "Share" and "Save to file" for tracks and waypoints together. CSV has no place for waypoints
- * next to tracks, so there they become one-point tracks named after the waypoint.
+ * "Share" and "Save to file" for tracks and waypoints: one file per track, and the waypoints
+ * together in one more file. BIN is always the one raw image. Several files are shared at once,
+ * or saved into a folder the user picks.
  */
 @Composable
 private fun ExportMenu(items: List<Item>) {
     val repo = A747App.repo
     val ctx = LocalContext.current
     var open by remember { mutableStateOf(false) }
-    var pending by remember { mutableStateOf<Pair<ByteArray, String>?>(null) }
-    val save = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("*/*")) { uri ->
+    var pending by remember { mutableStateOf<Pair<Format, List<Pair<ByteArray, String>>>?>(null) }
+    val saveOne = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("*/*")) { uri ->
         val p = pending ?: return@rememberLauncherForActivityResult
-        if (uri != null) ctx.contentResolver.openOutputStream(uri)?.use { it.write(p.first) }
+        if (uri != null) ctx.contentResolver.openOutputStream(uri)?.use { it.write(p.second[0].first) }
         pending = null
     }
-    fun content(f: Format): Pair<ByteArray, String> {
+    val saveMany = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { tree ->
+        val p = pending ?: return@rememberLauncherForActivityResult
+        pending = null
+        if (tree == null) return@rememberLauncherForActivityResult
+        val dir = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree))
+        runCatching {
+            for ((bytes, name) in p.second) {
+                // the provider adds " (1)" etc. if the name is taken
+                val doc = DocumentsContract.createDocument(ctx.contentResolver, dir, p.first.mime, "$name.${p.first.ext}") ?: continue
+                ctx.contentResolver.openOutputStream(doc)?.use { it.write(bytes) }
+            }
+        }.onFailure { repo.message.value = it.localizedMessage }
+    }
+    fun files(f: Format): List<Pair<ByteArray, String>> {
         val ex = repo.exporter
-        val tracks = items.filterIsInstance<Track>().map { it.points }.sortedBy { it[0].utc }
-        val wpts = items.filterIsInstance<Waypoint>().map { it.point }.sortedBy { it.utc }
-        val a = ex.name(items.minBy { it.utc }.let { if (it is Track) it.points[0] else (it as Waypoint).point }).take(10)
-        val b = ex.name(items.maxBy { it.utc }.let { if (it is Track) it.points[0] else (it as Waypoint).point }).take(10)
-        val base = if (a == b) "a747-$a" else "a747-${a}_$b"
-        val text = when (f) {
-            Format.GPX -> ex.gpx(tracks, wpts)
-            Format.KML -> ex.kml(tracks, wpts)
-            Format.CSV -> if (tracks.isEmpty()) ex.csvWaypoints(wpts) else ex.csv(tracks + wpts.map { listOf(it) })
-            Format.BIN -> null
+        if (f == Format.BIN) {
+            val img = repo.library.lastImage ?: return emptyList()
+            return listOf(img.readBytes() to img.name.removeSuffix(".bin"))
         }
-        val bytes = text?.toByteArray() ?: repo.library.lastImage?.readBytes() ?: ByteArray(0)
-        return bytes to "$base.${f.ext}"
+        val tracks = items.filterIsInstance<Track>().sortedBy { it.utc }
+        val wpts = items.filterIsInstance<Waypoint>().sortedBy { it.utc }
+        val out = tracks.map { t ->
+            val text = when (f) {
+                Format.GPX -> ex.gpx(listOf(t.points))
+                Format.KML -> ex.kml(listOf(t.points), emptyList())
+                else -> ex.csv(listOf(t.points))
+            }
+            text.toByteArray() to fileName(t)
+        }.toMutableList()
+        if (wpts.isNotEmpty()) {
+            val pts = wpts.map { it.point }
+            val text = when (f) {
+                Format.GPX -> ex.gpxWaypoints(pts)
+                Format.KML -> ex.kml(emptyList(), pts)
+                else -> ex.csvWaypoints(pts)
+            }
+            val a = wpts.first().name.take(10)
+            val b = wpts.last().name.take(10)
+            val name = if (wpts.size == 1) fileName(wpts[0]) else if (a == b) "a747-waypoints-$a" else "a747-waypoints-${a}_$b"
+            out += text.toByteArray() to name
+        }
+        return out
     }
     val formats = if (items.any { it is Track }) Format.entries else listOf(Format.GPX, Format.KML, Format.CSV)
     Box {
@@ -620,21 +656,27 @@ private fun ExportMenu(items: List<Item>) {
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp), color = MaterialTheme.colorScheme.primary)
             for (f in formats) DropdownMenuItem(text = { Text(f.name) }, onClick = {
                 open = false
-                val (bytes, name) = content(f)
-                val dir = File(ctx.cacheDir, "share").apply { mkdirs() }
-                val file = File(dir, name).apply { writeBytes(bytes) }
-                val uri = FileProvider.getUriForFile(ctx, ctx.packageName + ".files", file)
-                val send = Intent(Intent.ACTION_SEND).setType(f.mime).putExtra(Intent.EXTRA_STREAM, uri)
-                    .putExtra(Intent.EXTRA_SUBJECT, name).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                ctx.startActivity(Intent.createChooser(send, name))
+                val list = files(f)
+                if (list.isEmpty()) return@DropdownMenuItem
+                val dir = File(ctx.cacheDir, "share").apply { deleteRecursively(); mkdirs() }
+                val uris = ArrayList(list.map { (bytes, name) ->
+                    val file = File(dir, "$name.${f.ext}").apply { writeBytes(bytes) }
+                    FileProvider.getUriForFile(ctx, ctx.packageName + ".files", file)
+                })
+                val send = if (uris.size == 1) Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_STREAM, uris[0])
+                else Intent(Intent.ACTION_SEND_MULTIPLE).putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+                send.setType(f.mime).putExtra(Intent.EXTRA_SUBJECT, list[0].second).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                ctx.startActivity(Intent.createChooser(send, null))
             })
             HorizontalDivider()
             Text(stringResource(R.string.save_to_file), style = MaterialTheme.typography.labelMedium,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp), color = MaterialTheme.colorScheme.primary)
             for (f in formats) DropdownMenuItem(text = { Text(f.name) }, onClick = {
                 open = false
-                pending = content(f)
-                save.launch(pending!!.second)
+                val list = files(f)
+                if (list.isEmpty()) return@DropdownMenuItem
+                pending = f to list
+                if (list.size == 1) saveOne.launch("${list[0].second}.${f.ext}") else saveMany.launch(null)
             })
         }
     }

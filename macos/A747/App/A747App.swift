@@ -27,57 +27,21 @@ struct A747App: App {
     }
 }
 
-enum SidebarSection: String, Hashable, CaseIterable, Identifiable {
-    case device, tracks
-    // List(data, selection:) tags rows with `id`, so it must have the selection's type
-    var id: Self { self }
-
-    var title: LocalizedStringKey {
-        switch self {
-        case .device: "Device"
-        case .tracks: "Tracks"
-        }
-    }
-
-    var icon: String {
-        switch self {
-        case .device: "antenna.radiowaves.left.and.right"
-        case .tracks: "point.topleft.down.to.point.bottomright.curvepath"
-        }
-    }
-}
-
+/// One window: the list of tracks and waypoints on the left with the Device and Settings
+/// buttons under it; the right side shows the selection, or the device when nothing is selected.
 struct RootView: View {
     @Environment(AppModel.self) private var model
-    // `-initialSection tracks -selectFirstTrack YES` open a screen directly (used for screenshots)
-    @State private var section: SidebarSection? =
-        SidebarSection(rawValue: UserDefaults.standard.string(forKey: "initialSection") ?? "") ?? .device
-    @State private var trackSelection: Set<String> = []
+    @State private var selection: Set<String> = []
 
     var body: some View {
-        NavigationSplitView {
-            List(SidebarSection.allCases, selection: $section) { s in
-                Label(s.title, systemImage: s.icon)
-                    .badge(badge(s))
-            }
-            .navigationSplitViewColumnWidth(min: 180, ideal: 200)
-            .onAppear {
-                if UserDefaults.standard.bool(forKey: "selectFirstTrack"), let t = model.tracks.first {
-                    trackSelection = [LibraryItem.track(t).id]
-                }
-            }
-        } detail: {
-            switch section ?? .device {
-            case .device: DeviceView()
-            case .tracks: LibraryView(selection: $trackSelection)
-            }
+        NavigationStack {
+            LibraryView(selection: $selection)
         }
-    }
-
-    private func badge(_ s: SidebarSection) -> Int {
-        switch s {
-        case .device: 0
-        case .tracks: model.items.count
+        .onAppear {
+            // `-selectFirstTrack YES` opens the newest track directly (used for screenshots)
+            if UserDefaults.standard.bool(forKey: "selectFirstTrack"), let t = model.tracks.first {
+                selection = [LibraryItem.track(t).id]
+            }
         }
     }
 }

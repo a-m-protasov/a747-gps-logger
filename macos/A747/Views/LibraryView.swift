@@ -13,7 +13,11 @@ struct LibraryView: View {
 
     var body: some View {
         ResizableSplit {
-            list
+            VStack(spacing: 0) {
+                list.frame(maxHeight: .infinity)
+                Divider()
+                BottomBar(deviceShown: selection.isEmpty) { selection = [] }
+            }
         } detail: {
             detail
         }
@@ -22,7 +26,7 @@ struct LibraryView: View {
         .toolbar {
             ExportMenu(title: selection.isEmpty ? "Export all" : "Export selected", formats: ExportFormat.allCases) { f in
                 let items = selection.isEmpty ? model.items : chosen
-                return (try ExportBuilder.content(f, items: items, model: model), ExportBuilder.baseName(items, model: model))
+                return try ExportBuilder.files(f, items: items, model: model)
             }
             .disabled(model.items.isEmpty)
         }
@@ -83,8 +87,7 @@ struct LibraryView: View {
         let tracks = items.compactMap { if case .track(let t) = $0 { t } else { nil } }
         let wpts = items.compactMap { if case .waypoint(let w) = $0 { w } else { nil } }
         if items.isEmpty {
-            ContentUnavailableView("Select a track or waypoint", systemImage: "map")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            DeviceView()
         } else if !tracks.isEmpty {
             TrackDetail(tracks: tracks, selectedWaypoints: wpts)
         } else if wpts.count == 1, let w = wpts.first {
@@ -109,6 +112,47 @@ struct LibraryView: View {
         case .waypoint(let w): newName = w.customName ?? ""
         }
         renaming = item
+    }
+}
+
+/// The buttons under the list: Device (with a connection dot) and Settings.
+struct BottomBar: View {
+    @Environment(AppModel.self) private var model
+    let deviceShown: Bool
+    let showDevice: () -> Void
+
+    private var dot: Color {
+        switch model.device {
+        case .ready, .busy: .green
+        case .connecting: .orange
+        case .failed: .red
+        case .disconnected: .secondary.opacity(0.5)
+        }
+    }
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Button(action: showDevice) {
+                HStack(spacing: 6) {
+                    Image(systemName: "antenna.radiowaves.left.and.right")
+                    Text("Device")
+                    Circle().fill(dot).frame(width: 7, height: 7)
+                }
+                .padding(.horizontal, 10).padding(.vertical, 5)
+                .background(deviceShown ? Color.accentTrack.opacity(0.18) : .clear, in: .capsule)
+                .foregroundStyle(deviceShown ? Color.accentTrack : .primary)
+                .contentShape(.capsule)
+            }
+            .buttonStyle(.plain)
+            Spacer()
+            SettingsLink {
+                Image(systemName: "gearshape").padding(6).contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
     }
 }
 

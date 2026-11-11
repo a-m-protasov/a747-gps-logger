@@ -76,7 +76,8 @@ These apps fix all of that and give you the tracks in common formats.
   zooms the map to it.
 - **Rename and delete** tracks and waypoints. The raw downloads are kept as they are, and a
   deleted item does not come back with the next download.
-- **Export**: GPX 1.1, KML, CSV, or the raw BIN image — one track, a selection, or everything.
+- **Export**: GPX 1.1, KML, CSV, or the raw BIN image — one track, a selection, or everything,
+  each track in its own file.
   Share to Mail, Messages, Google Drive and so on, or save anywhere including iCloud Drive.
 - **Library**: everything downloaded stays on your device; re-downloading never duplicates.
 - **19 languages**: English, Russian, Serbian, Ukrainian, Kazakh, Georgian, Spanish,

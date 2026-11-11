@@ -25,7 +25,9 @@ Two native apps, logic written twice. To keep them identical:
   enter the repository.
 
 Shared design language (palette, icon, typography, screen structure); native controls on
-each platform. Tabs: **Device · Tracks · Settings** (tracks and waypoints share one list).
+each platform. Android tabs: **Device · Tracks · Settings** (tracks and waypoints share one list). macOS:
+one window, the list on the left with Device and Settings buttons under it; with nothing
+selected the right side shows the device.
 
 ## Device facts that shape the design
 
@@ -79,8 +81,9 @@ each platform. Tabs: **Device · Tracks · Settings** (tracks and waypoints shar
 
 ### Export and sharing
 - Formats: GPX 1.1, KML, CSV, BIN (raw dump).
-- One track, a selection, or everything; tracks and waypoints together in one file (in CSV
-  waypoints become one-point tracks). User names go into the files.
+- One track, a selection, or everything. Each track goes into its own file, the selected
+  waypoints into one more; several files are shared together or saved into a chosen folder.
+  User names go into the files and their names.
 - System share sheet (mail, Drive, messengers) and system save dialog (iCloud Drive on Mac,
   Google Drive via the Android document picker). No cloud SDKs, no OAuth.
 
