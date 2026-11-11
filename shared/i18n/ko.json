@@ -101,5 +101,13 @@
  "Yes": "예",
  "≈ %lld h of logging": "약 %lld시간 기록 가능",
  "Color by speed": "속도별 색상",
- "Track color": "트랙 색상"
+ "Track color": "트랙 색상",
+ "Rename": "이름 변경",
+ "Save": "저장",
+ "Delete": "삭제",
+ "Delete the selected items?": "선택한 항목을 삭제하시겠습니까?",
+ "Deleted tracks and waypoints won't come back after the next download.": "삭제한 트랙과 웨이포인트는 다음 다운로드 후에도 돌아오지 않습니다.",
+ "Select a track or waypoint": "트랙이나 웨이포인트를 선택하세요",
+ "Selected: %lld": "선택됨: %lld",
+ "Coordinates": "좌표"
 }

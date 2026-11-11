@@ -100,6 +100,14 @@
     <string name="about_n_h_of_logging">约可记录 %1$d 小时</string>
     <string name="color_by_speed">按速度着色</string>
     <string name="track_color">轨迹颜色</string>
+    <string name="rename">重命名</string>
+    <string name="save">存储</string>
+    <string name="delete">删除</string>
+    <string name="delete_the_selected_items">删除所选项目？</string>
+    <string name="deleted_tracks_and_waypoints_won_t_come_back_aft">已删除的轨迹和航点在下次下载后不会恢复。</string>
+    <string name="select_a_track_or_waypoint">选择轨迹或航点</string>
+    <string name="selected_n">已选：%1$d</string>
+    <string name="coordinates">坐标</string>
     <string name="turn_the_logger_on_and_connect_it_with_a_usb_otg">打开记录仪，用 USB OTG 线连接，或通过蓝牙配对。</string>
     <string name="connect_by_usb">通过 USB 连接</string>
     <string name="connect_by_bluetooth">通过蓝牙连接</string>

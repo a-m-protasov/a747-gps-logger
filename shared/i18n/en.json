@@ -101,5 +101,13 @@
  "Yes": "Yes",
  "≈ %lld h of logging": "≈ %lld h of logging",
  "Color by speed": "Color by speed",
- "Track color": "Track color"
+ "Track color": "Track color",
+ "Rename": "Rename",
+ "Save": "Save",
+ "Delete": "Delete",
+ "Delete the selected items?": "Delete the selected items?",
+ "Deleted tracks and waypoints won't come back after the next download.": "Deleted tracks and waypoints won't come back after the next download.",
+ "Select a track or waypoint": "Select a track or waypoint",
+ "Selected: %lld": "Selected: %lld",
+ "Coordinates": "Coordinates"
 }

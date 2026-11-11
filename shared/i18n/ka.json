@@ -101,5 +101,13 @@
  "Yes": "დიახ",
  "≈ %lld h of logging": "≈ %lld სთ ჩაწერა",
  "Color by speed": "ფერი სიჩქარის მიხედვით",
- "Track color": "ტრეკის ფერი"
+ "Track color": "ტრეკის ფერი",
+ "Rename": "გადარქმევა",
+ "Save": "შენახვა",
+ "Delete": "წაშლა",
+ "Delete the selected items?": "წავშალო არჩეული?",
+ "Deleted tracks and waypoints won't come back after the next download.": "წაშლილი ტრეკები და წერტილები შემდეგი ჩამოტვირთვისას აღარ დაბრუნდება.",
+ "Select a track or waypoint": "აირჩიეთ ტრეკი ან წერტილი",
+ "Selected: %lld": "არჩეულია: %lld",
+ "Coordinates": "კოორდინატები"
 }

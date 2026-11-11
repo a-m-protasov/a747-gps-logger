@@ -101,6 +101,14 @@
     <string name="about_n_h_of_logging">≈ %1$d h of logging</string>
     <string name="color_by_speed">Color by speed</string>
     <string name="track_color">Track color</string>
+    <string name="rename">Rename</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="delete_the_selected_items">Delete the selected items?</string>
+    <string name="deleted_tracks_and_waypoints_won_t_come_back_aft">Deleted tracks and waypoints won\'t come back after the next download.</string>
+    <string name="select_a_track_or_waypoint">Select a track or waypoint</string>
+    <string name="selected_n">Selected: %1$d</string>
+    <string name="coordinates">Coordinates</string>
     <string name="turn_the_logger_on_and_connect_it_with_a_usb_otg">Turn the logger on and connect it with a USB OTG cable, or pair it over Bluetooth.</string>
     <string name="connect_by_usb">Connect by USB</string>
     <string name="connect_by_bluetooth">Connect by Bluetooth</string>

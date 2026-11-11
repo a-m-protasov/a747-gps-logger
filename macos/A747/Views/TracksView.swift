@@ -2,77 +2,19 @@ import A747Core
 import Charts
 import SwiftUI
 
-struct TracksList: View {
-    @Environment(AppModel.self) private var model
-    @Binding var selection: Set<String>
-
-    private var days: [(String, [Track])] {
-        var order: [String] = []
-        var groups: [String: [Track]] = [:]
-        for t in model.tracks {
-            if groups[t.day] == nil { order.append(t.day) }
-            groups[t.day, default: []].append(t)
-        }
-        return order.map { ($0, groups[$0]!) }
-    }
-
-    var body: some View {
-        Group {
-            if model.tracks.isEmpty {
-                ContentUnavailableView("No tracks yet", systemImage: "point.topleft.down.to.point.bottomright.curvepath",
-                                       description: Text("Connect the logger and download its memory."))
-            } else {
-                List(selection: $selection) {
-                    ForEach(days, id: \.0) { day, tracks in
-                        Section(UI.day(day, tracks[0].timeZone)) {
-                            ForEach(tracks) { t in TrackRow(track: t).tag(t.id) }
-                        }
-                    }
-                }
-            }
-        }
-        .navigationTitle("Tracks")
-        .navigationSubtitle(Text("Tracks: \(model.tracks.count)"))
-        .toolbar {
-            ExportMenu(title: selection.isEmpty ? "Export all" : "Export selected",
-                       formats: ExportFormat.allCases) { f in
-                let chosen = selection.isEmpty ? model.tracks : model.tracks.filter { selection.contains($0.id) }
-                return (try ExportBuilder.content(f, tracks: chosen, model: model), ExportBuilder.baseName(chosen))
-            }
-            .disabled(model.tracks.isEmpty)
-        }
-    }
-}
-
-struct TrackRow: View {
-    let track: Track
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "point.topleft.down.to.point.bottomright.curvepath")
-                .foregroundStyle(Color.accentTrack)
-                .frame(width: 28, height: 28)
-                .background(Color.accentTrack.opacity(0.15), in: .circle)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("\(UI.time(track.stats.startUTC, track.timeZone)) – \(UI.time(track.stats.endUTC, track.timeZone))")
-                    .font(.body.weight(.medium))
-                Text("\(UI.distance(track.stats.distanceM)) · \(UI.duration(track.stats.durationS))")
-                    .font(.callout).foregroundStyle(.secondary)
-            }
-        }
-        .padding(.vertical, 2)
-    }
-}
-
 struct TrackDetail: View {
     @Environment(AppModel.self) private var model
     let tracks: [Track]
+    /// Waypoints selected together with the tracks.
+    var selectedWaypoints: [Waypoint] = []
     @AppStorage("showWaypointsOnTrack") private var showWaypoints = false
 
     private var waypoints: [Waypoint] {
-        guard showWaypoints, let a = tracks.map(\.stats.startUTC).min(), let b = tracks.map(\.stats.endUTC).max()
-        else { return [] }
-        return model.waypoints.filter { (a...b).contains($0.point.utc) }
+        var out = selectedWaypoints
+        if showWaypoints, let a = tracks.map(\.stats.startUTC).min(), let b = tracks.map(\.stats.endUTC).max() {
+            out += model.waypoints.filter { (a...b).contains($0.point.utc) && !out.contains($0) }
+        }
+        return out
     }
 
     var body: some View {
@@ -83,10 +25,11 @@ struct TrackDetail: View {
                 ScrollView { TrackStatsView(track: t).padding(20) }
                     .frame(height: 300)
             } else {
-                Text("Selected tracks: \(tracks.count)").foregroundStyle(.secondary).padding()
+                Text("Selected: \(tracks.count + selectedWaypoints.count)").foregroundStyle(.secondary).padding()
             }
         }
-        .navigationTitle(tracks.count == 1 ? tracks[0].name : String(localized: "Tracks: \(tracks.count)"))
+        .navigationTitle(tracks.count == 1 && selectedWaypoints.isEmpty ? tracks[0].title
+                         : String(localized: "Selected: \(tracks.count + selectedWaypoints.count)"))
         .toolbar {
             Toggle(isOn: $showWaypoints) { Label("Waypoints", systemImage: "mappin") }
                 .help("Show waypoints made during this track")

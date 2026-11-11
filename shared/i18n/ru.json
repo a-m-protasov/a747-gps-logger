@@ -101,5 +101,13 @@
  "Yes": "Да",
  "≈ %lld h of logging": "≈ %lld ч записи",
  "Color by speed": "Цвет по скорости",
- "Track color": "Цвет трека"
+ "Track color": "Цвет трека",
+ "Rename": "Переименовать",
+ "Save": "Сохранить",
+ "Delete": "Удалить",
+ "Delete the selected items?": "Удалить выбранное?",
+ "Deleted tracks and waypoints won't come back after the next download.": "Удалённые треки и точки не вернутся при следующем скачивании.",
+ "Select a track or waypoint": "Выберите трек или точку",
+ "Selected: %lld": "Выбрано: %lld",
+ "Coordinates": "Координаты"
 }

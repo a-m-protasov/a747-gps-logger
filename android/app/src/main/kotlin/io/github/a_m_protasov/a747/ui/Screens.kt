@@ -7,7 +7,9 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +32,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bluetooth
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Memory
@@ -60,6 +64,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -83,11 +88,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.a_m_protasov.a747.A747App
 import io.github.a_m_protasov.a747.DeviceState
+import io.github.a_m_protasov.a747.Item
 import io.github.a_m_protasov.a747.Link
 import io.github.a_m_protasov.a747.R
 import io.github.a_m_protasov.a747.Track
@@ -99,7 +107,6 @@ import java.io.File
 private enum class Tab(val title: Int, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     DEVICE(R.string.device, Icons.Filled.SatelliteAlt),
     TRACKS(R.string.tracks, Icons.Filled.Route),
-    WAYPOINTS(R.string.waypoints, Icons.Filled.Place),
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -113,8 +120,8 @@ fun A747Root(
     UI.ctx = LocalContext.current.applicationContext
     var tab by rememberSaveable { mutableStateOf(Tab.DEVICE) }
     var settings by rememberSaveable { mutableStateOf(false) }
-    var openTrack by rememberSaveable { mutableStateOf<String?>(null) }
-    val tracks by repo.tracks.collectAsStateWithLifecycle()
+    var openItem by rememberSaveable { mutableStateOf<String?>(null) }
+    val items by repo.items.collectAsStateWithLifecycle()
     val waypoints by repo.waypoints.collectAsStateWithLifecycle()
     val message by repo.message.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
@@ -122,15 +129,18 @@ fun A747Root(
         message?.let { snackbar.showSnackbar(it); repo.message.value = null }
     }
 
-    val track = tracks.firstOrNull { it.id == openTrack }
+    val item = items.firstOrNull { it.key == openItem }
     if (settings) {
         BackHandler { settings = false }
         SettingsScreen(onBack = { settings = false })
         return
     }
-    if (track != null) {
-        BackHandler { openTrack = null }
-        TrackDetail(track, waypoints, onBack = { openTrack = null })
+    if (item != null) {
+        BackHandler { openItem = null }
+        when (item) {
+            is Track -> TrackDetail(item, waypoints, onBack = { openItem = null })
+            is Waypoint -> WaypointDetail(item, onBack = { openItem = null })
+        }
         return
     }
     Scaffold(
@@ -139,8 +149,7 @@ fun A747Root(
                 title = { Text(stringResource(tab.title)) },
                 actions = {
                     when (tab) {
-                        Tab.TRACKS -> if (tracks.isNotEmpty()) ExportMenu(tracks.map { it.points }, waypoints = null)
-                        Tab.WAYPOINTS -> if (waypoints.isNotEmpty()) ExportMenu(null, waypoints)
+                        Tab.TRACKS -> if (items.isNotEmpty()) ExportMenu(items)
                         Tab.DEVICE -> {}
                     }
                     IconButton(onClick = { settings = true }) { Icon(Icons.Filled.Settings, stringResource(R.string.settings)) }
@@ -150,7 +159,7 @@ fun A747Root(
         bottomBar = {
             NavigationBar {
                 for (t in Tab.entries) {
-                    val count = when (t) { Tab.TRACKS -> tracks.size; Tab.WAYPOINTS -> waypoints.size; else -> 0 }
+                    val count = if (t == Tab.TRACKS) items.size else 0
                     NavigationBarItem(
                         selected = tab == t,
                         onClick = { tab = t },
@@ -167,8 +176,7 @@ fun A747Root(
         Box(Modifier.padding(pad)) {
             when (tab) {
                 Tab.DEVICE -> DeviceScreen(onConnectUsb, pairedDevices, onConnectBluetooth)
-                Tab.TRACKS -> TracksScreen(tracks) { openTrack = it.id }
-                Tab.WAYPOINTS -> WaypointsScreen(waypoints)
+                Tab.TRACKS -> LibraryScreen(items) { openItem = it.key }
             }
         }
     }
@@ -358,26 +366,102 @@ private fun fieldNames(mask: Long): String {
 
 // MARK: Tracks
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun TracksScreen(tracks: List<Track>, onOpen: (Track) -> Unit) {
-    if (tracks.isEmpty()) return Empty(Icons.Filled.Route, R.string.no_tracks_yet, R.string.connect_the_logger_and_download_its_memory)
-    val days = tracks.groupBy { it.day }
+private fun LibraryScreen(items: List<Item>, onOpen: (Item) -> Unit) {
+    if (items.isEmpty()) return Empty(Icons.Filled.Route, R.string.no_tracks_yet, R.string.connect_the_logger_and_download_its_memory)
+    val days = items.groupBy { it.day }
+    var menuFor by remember { mutableStateOf<String?>(null) }
+    var renaming by remember { mutableStateOf<Item?>(null) }
+    var deleting by remember { mutableStateOf<Item?>(null) }
     LazyColumn(contentPadding = PaddingValues(vertical = 8.dp)) {
         for ((day, list) in days) {
             item(key = "d$day") {
                 Text(UI.day(day), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
             }
-            items(list, key = { it.id }) { t ->
-                ListItem(
-                    modifier = Modifier.clickable { onOpen(t) },
-                    leadingContent = { Dot(Icons.Filled.Route, MaterialTheme.colorScheme.primary) },
-                    headlineContent = { Text("${UI.time(t.stats.startUtc, t.zone)} – ${UI.time(t.stats.endUtc, t.zone)}", fontWeight = FontWeight.Medium) },
-                    supportingContent = { Text("${UI.distance(t.stats.distanceM)} · ${UI.duration(t.stats.durationS)}") },
-                )
+            items(list, key = { it.key }) { i ->
+                Box {
+                    ItemRow(i, Modifier.combinedClickable(onClick = { onOpen(i) }, onLongClick = { menuFor = i.key }))
+                    DropdownMenu(expanded = menuFor == i.key, onDismissRequest = { menuFor = null }, offset = DpOffset(72.dp, 0.dp)) {
+                        DropdownMenuItem(text = { Text(stringResource(R.string.rename)) }, leadingIcon = { Icon(Icons.Filled.Edit, null) },
+                            onClick = { menuFor = null; renaming = i })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.delete)) }, leadingIcon = { Icon(Icons.Filled.Delete, null) },
+                            onClick = { menuFor = null; deleting = i })
+                    }
+                }
             }
         }
     }
+    renaming?.let { RenameDialog(it) { renaming = null } }
+    deleting?.let { DeleteDialog(it, onDone = { deleting = null }) }
+}
+
+@Composable
+private fun ItemRow(i: Item, modifier: Modifier) {
+    val (title, sub) = when (i) {
+        is Track -> {
+            val span = "${UI.time(i.stats.startUtc, i.zone)} – ${UI.time(i.stats.endUtc, i.zone)}"
+            val size = "${UI.distance(i.stats.distanceM)} · ${UI.duration(i.stats.durationS)}"
+            if (i.customName != null) i.customName to "$span · $size" else span to size
+        }
+        is Waypoint -> {
+            val time = UI.time(i.point.utc, i.zone)
+            val coords = UI.coordinates(i.point)
+            if (i.customName != null) i.customName to "$time · $coords" else time to coords
+        }
+    }
+    ListItem(
+        modifier = modifier,
+        leadingContent = {
+            if (i is Track) Dot(Icons.Filled.Route, MaterialTheme.colorScheme.primary) else Dot(Icons.Filled.Place, WaypointColor)
+        },
+        headlineContent = { Text(title, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        supportingContent = { Text(sub, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+    )
+}
+
+/** Name field; the default name (date and time) shows as the hint, and an empty field restores it. */
+@Composable
+private fun RenameDialog(item: Item, onDone: () -> Unit) {
+    var text by remember { mutableStateOf(item.customName ?: "") }
+    AlertDialog(
+        onDismissRequest = onDone,
+        title = { Text(stringResource(R.string.rename)) },
+        text = {
+            OutlinedTextField(text, { text = it }, placeholder = { Text(item.name) }, singleLine = true,
+                modifier = Modifier.fillMaxWidth())
+        },
+        confirmButton = { TextButton(onClick = { A747App.repo.rename(item, text); onDone() }) { Text(stringResource(R.string.save)) } },
+        dismissButton = { TextButton(onClick = onDone) { Text(stringResource(R.string.cancel)) } },
+    )
+}
+
+@Composable
+private fun DeleteDialog(item: Item, onDone: () -> Unit, onDeleted: () -> Unit = {}) {
+    AlertDialog(
+        onDismissRequest = onDone,
+        icon = { Icon(Icons.Filled.Delete, null, tint = MaterialTheme.colorScheme.error) },
+        title = { Text(stringResource(R.string.delete_the_selected_items)) },
+        text = { Text("${item.title}\n\n" + stringResource(R.string.deleted_tracks_and_waypoints_won_t_come_back_aft)) },
+        confirmButton = {
+            TextButton(onClick = { A747App.repo.delete(listOf(item)); onDone(); onDeleted() }) {
+                Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
+            }
+        },
+        dismissButton = { TextButton(onClick = onDone) { Text(stringResource(R.string.cancel)) } },
+    )
+}
+
+/** Rename and delete buttons for a detail screen's top bar. */
+@Composable
+private fun EditActions(item: Item, onDeleted: () -> Unit) {
+    var renaming by remember { mutableStateOf(false) }
+    var deleting by remember { mutableStateOf(false) }
+    IconButton(onClick = { renaming = true }) { Icon(Icons.Filled.Edit, stringResource(R.string.rename)) }
+    IconButton(onClick = { deleting = true }) { Icon(Icons.Filled.Delete, stringResource(R.string.delete)) }
+    if (renaming) RenameDialog(item) { renaming = false }
+    if (deleting) DeleteDialog(item, onDone = { deleting = false }, onDeleted = onDeleted)
 }
 
 @Composable
@@ -405,21 +489,26 @@ private fun TrackDetail(track: Track, allWaypoints: List<Waypoint>, onBack: () -
     val wpts = if (showWpts) allWaypoints.filter { it.point.utc in track.stats.startUtc..track.stats.endUtc } else emptyList()
     Scaffold(topBar = {
         TopAppBar(
-            title = { Text(UI.time(track.stats.startUtc, track.zone, withDate = true)) },
+            title = { Text(track.customName ?: UI.time(track.stats.startUtc, track.zone, withDate = true), maxLines = 1,
+                overflow = TextOverflow.Ellipsis) },
             navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
             actions = {
                 IconButton(onClick = { showWpts = !showWpts }) {
                     Icon(Icons.Filled.Place, stringResource(R.string.show_waypoints_made_during_this_track),
                         tint = if (showWpts) WaypointColor else MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                ExportMenu(listOf(track.points), waypoints = null)
+                ExportMenu(listOf(track))
+                EditActions(track, onDeleted = onBack)
             },
         )
     }) { pad ->
-        Column(Modifier.padding(pad).verticalScroll(rememberScrollState())) {
-            MapWeb(listOf(track.points), wpts, Modifier.fillMaxWidth().height(320.dp))
+        // the map gets 2/3 of the screen and is not inside a scrolling container, so its pan and
+        // zoom gestures are not fought over; the stats scroll in the remaining third
+        Column(Modifier.padding(pad).fillMaxSize()) {
+            MapWeb(listOf(track.points), wpts, Modifier.fillMaxWidth().weight(2f))
             val st = track.stats
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Stat(R.string.distance, UI.distance(st.distanceM))
                     Stat(R.string.duration, UI.duration(st.durationS))
@@ -457,19 +546,29 @@ private fun Stat(title: Int, value: String) {
 
 // MARK: Waypoints
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun WaypointsScreen(waypoints: List<Waypoint>) {
-    if (waypoints.isEmpty()) return Empty(Icons.Filled.Place, R.string.no_waypoints, R.string.press_the_button_on_the_logger_to_mark_a_place)
-    Column {
-        MapWeb(emptyList(), waypoints, Modifier.fillMaxWidth().height(260.dp))
-        LazyColumn {
-            items(waypoints, key = { it.id }) { w ->
-                ListItem(
-                    leadingContent = { Dot(Icons.Filled.Place, WaypointColor) },
-                    headlineContent = { Text(UI.time(w.point.utc, w.zone, withDate = true), fontWeight = FontWeight.Medium) },
-                    supportingContent = { Text("%.5f, %.5f".format(w.point.lat, w.point.lon)) },
-                )
-                HorizontalDivider(Modifier.padding(start = 72.dp))
+private fun WaypointDetail(w: Waypoint, onBack: () -> Unit) {
+    Scaffold(topBar = {
+        TopAppBar(
+            title = { Text(w.customName ?: UI.time(w.point.utc, w.zone, withDate = true), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
+            actions = {
+                ExportMenu(listOf(w))
+                EditActions(w, onDeleted = onBack)
+            },
+        )
+    }) { pad ->
+        Column(Modifier.padding(pad).fillMaxSize()) {
+            // one waypoint: the map zooms in on it
+            MapWeb(emptyList(), listOf(w), Modifier.fillMaxWidth().weight(2f))
+            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Stat(R.string.time, UI.time(w.point.utc, w.zone, withDate = true))
+                    Stat(R.string.coordinates, UI.coordinates(w.point))
+                    w.point.height?.let { Stat(R.string.elevation, UI.height(it)) }
+                }
             }
         }
     }
@@ -482,9 +581,12 @@ private enum class Format(val ext: String, val mime: String) {
     CSV("csv", "text/csv"), BIN("bin", "application/octet-stream"),
 }
 
-/** "Share" and "Save to file" for tracks (or waypoints when [tracks] is null). */
+/**
+ * "Share" and "Save to file" for tracks and waypoints together. CSV has no place for waypoints
+ * next to tracks, so there they become one-point tracks named after the waypoint.
+ */
 @Composable
-private fun ExportMenu(tracks: List<List<io.github.a_m_protasov.a747.core.LogPoint>>?, waypoints: List<Waypoint>?) {
+private fun ExportMenu(items: List<Item>) {
     val repo = A747App.repo
     val ctx = LocalContext.current
     var open by remember { mutableStateOf(false) }
@@ -496,22 +598,21 @@ private fun ExportMenu(tracks: List<List<io.github.a_m_protasov.a747.core.LogPoi
     }
     fun content(f: Format): Pair<ByteArray, String> {
         val ex = repo.exporter
-        val sorted = tracks?.sortedBy { it[0].utc }
-        val pts = waypoints?.map { it.point }?.sortedBy { it.utc }
-        val base = if (sorted != null) {
-            val a = ex.name(sorted.first()[0]).take(10); val b = ex.name(sorted.last()[0]).take(10)
-            if (a == b) "a747-$a" else "a747-${a}_$b"
-        } else "a747-waypoints"
+        val tracks = items.filterIsInstance<Track>().map { it.points }.sortedBy { it[0].utc }
+        val wpts = items.filterIsInstance<Waypoint>().map { it.point }.sortedBy { it.utc }
+        val a = ex.name(items.minBy { it.utc }.let { if (it is Track) it.points[0] else (it as Waypoint).point }).take(10)
+        val b = ex.name(items.maxBy { it.utc }.let { if (it is Track) it.points[0] else (it as Waypoint).point }).take(10)
+        val base = if (a == b) "a747-$a" else "a747-${a}_$b"
         val text = when (f) {
-            Format.GPX -> if (sorted != null) ex.gpx(sorted) else ex.gpxWaypoints(pts!!)
-            Format.KML -> if (sorted != null) ex.kml(sorted, emptyList()) else ex.kml(emptyList(), pts!!)
-            Format.CSV -> if (sorted != null) ex.csv(sorted) else ex.csvWaypoints(pts!!)
+            Format.GPX -> ex.gpx(tracks, wpts)
+            Format.KML -> ex.kml(tracks, wpts)
+            Format.CSV -> if (tracks.isEmpty()) ex.csvWaypoints(wpts) else ex.csv(tracks + wpts.map { listOf(it) })
             Format.BIN -> null
         }
         val bytes = text?.toByteArray() ?: repo.library.lastImage?.readBytes() ?: ByteArray(0)
         return bytes to "$base.${f.ext}"
     }
-    val formats = if (tracks != null) Format.entries else listOf(Format.GPX, Format.KML, Format.CSV)
+    val formats = if (items.any { it is Track }) Format.entries else listOf(Format.GPX, Format.KML, Format.CSV)
     Box {
         IconButton(onClick = { open = true }) { Icon(Icons.Filled.Share, stringResource(R.string.share)) }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {

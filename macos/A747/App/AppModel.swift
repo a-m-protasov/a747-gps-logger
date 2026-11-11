@@ -6,10 +6,14 @@ import SwiftUI
 struct Track: Identifiable, Hashable {
     let points: [LogPoint]
     let stats: TrackStats
+    /// Default name: local date and time of the start.
     let name: String
+    /// Name given by the user.
+    let customName: String?
     let day: String
     let timeZone: TimeZone
     var id: String { stats.id }
+    var title: String { customName ?? name }
 
     static func == (a: Track, b: Track) -> Bool { a.id == b.id }
     func hash(into h: inout Hasher) { h.combine(id) }
@@ -18,8 +22,45 @@ struct Track: Identifiable, Hashable {
 struct Waypoint: Identifiable, Hashable {
     let point: LogPoint
     let name: String
+    let customName: String?
+    let day: String
     let timeZone: TimeZone
     var id: String { "\(point.utc)-\(point.lat)-\(point.lon)" }
+    var title: String { customName ?? name }
+}
+
+/// A row of the library list: tracks and waypoints together, newest first.
+enum LibraryItem: Identifiable, Hashable {
+    case track(Track)
+    case waypoint(Waypoint)
+
+    var id: String {
+        switch self {
+        case .track(let t): "t:" + t.id
+        case .waypoint(let w): "w:" + w.id
+        }
+    }
+
+    var utc: Int64 {
+        switch self {
+        case .track(let t): t.stats.startUTC
+        case .waypoint(let w): w.point.utc
+        }
+    }
+
+    var day: String {
+        switch self {
+        case .track(let t): t.day
+        case .waypoint(let w): w.day
+        }
+    }
+
+    var timeZone: TimeZone {
+        switch self {
+        case .track(let t): t.timeZone
+        case .waypoint(let w): w.timeZone
+        }
+    }
 }
 
 enum DeviceState: Equatable {
@@ -38,6 +79,8 @@ final class AppModel {
     var library = LibraryStore()
     var tracks: [Track] = []
     var waypoints: [Waypoint] = []
+    var items: [LibraryItem] = []
+    var edits = LibraryEdits()
     var device: DeviceState = .disconnected
     var live: LiveStatus?
     var lastInfo: DeviceInfo?
@@ -47,29 +90,64 @@ final class AppModel {
     @ObservationIgnored private var client: LoggerClient?
     @ObservationIgnored private var watcher: Task<Void, Never>?
 
-    var exporter: Exporter { Exporter(tz: tz) }
+    var exporter: Exporter { Exporter(tz: tz, names: edits.names) }
 
     init() {
         let url = Bundle.main.url(forResource: "timezones", withExtension: "bin")!
         tz = try! TimeZoneDB(data: Data(contentsOf: url))
+        edits = LibraryEdits.load(library.dir)
         reload()
         watch()
     }
 
     func reload() {
         let now = Int64(Date().timeIntervalSince1970)
-        let (points, wpts, _) = library.load(now: now)
+        var (points, wpts, _) = library.load(now: now)
+        points.removeAll { edits.isDeleted(point: $0.utc) }
+        wpts.removeAll { edits.deletedWaypoints.contains($0.utc) }
         let ex = exporter
         let dayFmt = DateFormatter()
         dayFmt.locale = Locale(identifier: "en_US_POSIX")
         dayFmt.dateFormat = "yyyy-MM-dd"
+        func day(_ p: LogPoint, _ zone: TimeZone) -> String {
+            dayFmt.timeZone = zone
+            return dayFmt.string(from: Date(timeIntervalSince1970: TimeInterval(p.utc)))
+        }
         tracks = Tracks.split(points, gapSeconds: Int64(splitGapMinutes) * 60).map { t in
             let zone = tz.timeZone(lat: t[0].lat, lon: t[0].lon)
-            dayFmt.timeZone = zone
-            return Track(points: t, stats: Tracks.stats(t), name: ex.name(t[0]),
-                         day: dayFmt.string(from: Date(timeIntervalSince1970: TimeInterval(t[0].utc))), timeZone: zone)
+            return Track(points: t, stats: Tracks.stats(t), name: ex.name(t[0]), customName: edits.names[t[0].utc],
+                         day: day(t[0], zone), timeZone: zone)
         }.reversed()
-        waypoints = wpts.map { Waypoint(point: $0, name: ex.name($0), timeZone: tz.timeZone(lat: $0.lat, lon: $0.lon)) }.reversed()
+        waypoints = wpts.map {
+            let zone = tz.timeZone(lat: $0.lat, lon: $0.lon)
+            return Waypoint(point: $0, name: ex.name($0), customName: edits.names[$0.utc], day: day($0, zone), timeZone: zone)
+        }.reversed()
+        items = (tracks.map(LibraryItem.track) + waypoints.map(LibraryItem.waypoint)).sorted { $0.utc > $1.utc }
+    }
+
+    // MARK: Edits
+
+    /// Sets (or, with an empty string, clears) the name of a track or waypoint.
+    func rename(_ item: LibraryItem, to name: String) {
+        let n = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let key: Int64 = switch item {
+        case .track(let t): t.points[0].utc
+        case .waypoint(let w): w.point.utc
+        }
+        edits.names[key] = n.isEmpty ? nil : n
+        edits.save(library.dir)
+        reload()
+    }
+
+    func delete(_ ids: Set<String>) {
+        for item in items where ids.contains(item.id) {
+            switch item {
+            case .track(let t): edits.deletedTracks.append([t.stats.startUTC, t.stats.endUTC])
+            case .waypoint(let w): edits.deletedWaypoints.insert(w.point.utc)
+            }
+        }
+        edits.save(library.dir)
+        reload()
     }
 
     // MARK: Device

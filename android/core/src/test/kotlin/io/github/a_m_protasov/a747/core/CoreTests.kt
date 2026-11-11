@@ -50,6 +50,14 @@ class FixtureTests {
         assertEquals(File(dir, "tracks.kml").readText(), ex.kml(tracks, r.waypoints))
         assertEquals(File(dir, "tracks.csv").readText(), ex.csv(tracks))
         assertEquals(File(dir, "waypoints.csv").readText(), ex.csvWaypoints(r.waypoints))
+
+        // names given by the user replace the default ones, escaped for each format
+        val named = Exporter(tz, mapOf(tracks[0][0].utc to "Home, \"<A&B>\""))
+        assertTrue(named.gpx(listOf(tracks[0])).contains("<name>Home, &quot;&lt;A&amp;B&gt;&quot;</name>"))
+        assertTrue(named.csv(listOf(tracks[0])).contains("\n\"Home, \"\"<A&B>\"\"\","))
+        // waypoints come before tracks in one GPX file
+        val both = ex.gpx(tracks, r.waypoints)
+        if (r.waypoints.isNotEmpty()) assertTrue(both.indexOf("<wpt ") < both.indexOf("<trk>"))
     }
 
     @Test fun basic() = check("basic")

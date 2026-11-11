@@ -100,6 +100,14 @@
     <string name="about_n_h_of_logging">≈ %1$d h записивања</string>
     <string name="color_by_speed">Боја према брзини</string>
     <string name="track_color">Боја трасе</string>
+    <string name="rename">Преименуј</string>
+    <string name="save">Сачувај</string>
+    <string name="delete">Обриши</string>
+    <string name="delete_the_selected_items">Обрисати изабрано?</string>
+    <string name="deleted_tracks_and_waypoints_won_t_come_back_aft">Обрисане трасе и тачке се неће вратити при следећем преузимању.</string>
+    <string name="select_a_track_or_waypoint">Изаберите трасу или тачку</string>
+    <string name="selected_n">Изабрано: %1$d</string>
+    <string name="coordinates">Координате</string>
     <string name="turn_the_logger_on_and_connect_it_with_a_usb_otg">Укључите логер и повежите га USB OTG каблом или упарите преко Bluetooth-а.</string>
     <string name="connect_by_usb">Повежи преко USB-а</string>
     <string name="connect_by_bluetooth">Повежи преко Bluetooth-а</string>

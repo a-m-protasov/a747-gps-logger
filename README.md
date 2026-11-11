@@ -70,8 +70,12 @@ These apps fix all of that and give you the tracks in common formats.
   then switches logging back on and checks it.
 - **Tracks**: the log is split into trips at pauses longer than 30 min (adjustable) and grouped
   by day in the **local time of the place** the track was recorded. Each track has a map,
-  distance, durations, speeds, ascent/descent and speed/elevation charts.
-- **Waypoints**: places marked with the button, in a separate list and map.
+  distance, durations, speeds, ascent/descent and speed/elevation charts. The track is coloured
+  by speed (slowest red, fastest green) or in one colour of your choice.
+- **Waypoints**: places marked with the button, listed together with the tracks; opening one
+  zooms the map to it.
+- **Rename and delete** tracks and waypoints. The raw downloads are kept as they are, and a
+  deleted item does not come back with the next download.
 - **Export**: GPX 1.1, KML, CSV, or the raw BIN image — one track, a selection, or everything.
   Share to Mail, Messages, Google Drive and so on, or save anywhere including iCloud Drive.
 - **Library**: everything downloaded stays on your device; re-downloading never duplicates.
@@ -83,7 +87,7 @@ Settings on the logger (log format, intervals) are shown but not changed in this
 
 <p align="center">
 <img src="docs/images/mac-device.png" width="420" alt="Device screen on macOS">
-<img src="docs/images/android-waypoints.png" width="190" alt="Waypoints on Android">
+<img src="docs/images/android-list.png" width="190" alt="Tracks and waypoints on Android">
 </p>
 
 ## Install

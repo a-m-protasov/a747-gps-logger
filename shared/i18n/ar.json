@@ -101,5 +101,13 @@
  "Yes": "نعم",
  "≈ %lld h of logging": "≈ %lld ساعة من التسجيل",
  "Color by speed": "اللون حسب السرعة",
- "Track color": "لون المسار"
+ "Track color": "لون المسار",
+ "Rename": "إعادة التسمية",
+ "Save": "حفظ",
+ "Delete": "حذف",
+ "Delete the selected items?": "هل تريد حذف العناصر المحددة؟",
+ "Deleted tracks and waypoints won't come back after the next download.": "لن تعود المسارات والنقاط المحذوفة بعد التنزيل التالي.",
+ "Select a track or waypoint": "اختر مسارًا أو نقطة",
+ "Selected: %lld": "المحدد: %lld",
+ "Coordinates": "الإحداثيات"
 }

@@ -28,7 +28,7 @@ struct A747App: App {
 }
 
 enum SidebarSection: String, Hashable, CaseIterable, Identifiable {
-    case device, tracks, waypoints
+    case device, tracks
     // List(data, selection:) tags rows with `id`, so it must have the selection's type
     var id: Self { self }
 
@@ -36,7 +36,6 @@ enum SidebarSection: String, Hashable, CaseIterable, Identifiable {
         switch self {
         case .device: "Device"
         case .tracks: "Tracks"
-        case .waypoints: "Waypoints"
         }
     }
 
@@ -44,7 +43,6 @@ enum SidebarSection: String, Hashable, CaseIterable, Identifiable {
         switch self {
         case .device: "antenna.radiowaves.left.and.right"
         case .tracks: "point.topleft.down.to.point.bottomright.curvepath"
-        case .waypoints: "mappin.and.ellipse"
         }
     }
 }
@@ -65,24 +63,13 @@ struct RootView: View {
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
             .onAppear {
                 if UserDefaults.standard.bool(forKey: "selectFirstTrack"), let t = model.tracks.first {
-                    trackSelection = [t.id]
+                    trackSelection = [LibraryItem.track(t).id]
                 }
             }
         } detail: {
             switch section ?? .device {
             case .device: DeviceView()
-            case .waypoints: WaypointsView()
-            case .tracks:
-                HSplitView {
-                    TracksList(selection: $trackSelection).frame(minWidth: 280, idealWidth: 320)
-                    let chosen = model.tracks.filter { trackSelection.contains($0.id) }
-                    if chosen.isEmpty {
-                        ContentUnavailableView("Select a track", systemImage: "map")
-                            .frame(minWidth: 400, maxWidth: .infinity, maxHeight: .infinity)
-                    } else {
-                        TrackDetail(tracks: chosen).frame(minWidth: 400)
-                    }
-                }
+            case .tracks: LibraryView(selection: $trackSelection)
             }
         }
     }
@@ -90,8 +77,7 @@ struct RootView: View {
     private func badge(_ s: SidebarSection) -> Int {
         switch s {
         case .device: 0
-        case .tracks: model.tracks.count
-        case .waypoints: model.waypoints.count
+        case .tracks: model.items.count
         }
     }
 }

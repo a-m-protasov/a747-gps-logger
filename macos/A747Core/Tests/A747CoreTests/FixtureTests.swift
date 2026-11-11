@@ -68,6 +68,14 @@ struct FixtureTests {
         #expect(ex.kml(tracks: tracks, waypoints: r.waypoints) == (try golden(dir, "tracks.kml")))
         #expect(ex.csv(tracks: tracks) == (try golden(dir, "tracks.csv")))
         #expect(ex.csv(waypoints: r.waypoints) == (try golden(dir, "waypoints.csv")))
+
+        // names given by the user replace the default ones, escaped for each format
+        let named = Exporter(tz: Self.tz, names: [tracks[0][0].utc: "Home, \"<A&B>\""])
+        #expect(named.gpx(tracks: [tracks[0]]).contains("<name>Home, &quot;&lt;A&amp;B&gt;&quot;</name>"))
+        #expect(named.csv(tracks: [tracks[0]]).contains("\n\"Home, \"\"<A&B>\"\"\","))
+        // waypoints come before tracks in one GPX file
+        let both = ex.gpx(tracks: tracks, waypoints: r.waypoints)
+        if let w = both.range(of: "<wpt "), let t = both.range(of: "<trk>") { #expect(w.lowerBound < t.lowerBound) }
     }
 
     @Test func flashSize() {

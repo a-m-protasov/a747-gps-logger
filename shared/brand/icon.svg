@@ -37,16 +37,16 @@
       <ellipse rx="13" ry="5" transform="rotate(35)"/><ellipse rx="13" ry="5" transform="rotate(-35)"/><circle r="2.5" fill="#C9CCD1"/>
     </g>
     <!-- arc under the button -->
-    <path d="M62 236 Q115 278 168 236" fill="none" stroke="#1E1F22" stroke-width="3"/>
-    <!-- LEDs: top amber, left blue, right red (symmetric) -->
-    <ellipse cx="115" cy="160" rx="9" ry="22" fill="#FFB020" filter="url(#glow)"/>
-    <ellipse cx="62" cy="222" rx="24" ry="9" fill="#2F6BFF" filter="url(#glow)"/>
-    <ellipse cx="168" cy="222" rx="24" ry="9" fill="#FF3B30" filter="url(#glow)"/>
+    <path d="M58 262 Q115 300 172 262" fill="none" stroke="#1E1F22" stroke-width="3"/>
+    <!-- LEDs: three rays from the button, 120° apart: top amber, lower left blue, lower right red -->
+    <ellipse rx="9" ry="22" transform="translate(115.0 168.0) rotate(0)" fill="#FFB020" filter="url(#glow)"/>
+    <ellipse rx="9" ry="22" transform="translate(71.7 243.0) rotate(60)" fill="#2F6BFF" filter="url(#glow)"/>
+    <ellipse rx="9" ry="22" transform="translate(158.3 243.0) rotate(-60)" fill="#FF3B30" filter="url(#glow)"/>
     <!-- button -->
     <circle cx="115" cy="218" r="20" fill="url(#btn)" stroke="#0B0B0C" stroke-width="2"/>
     <ellipse cx="109" cy="211" rx="8" ry="4" fill="#ffffff" opacity="0.35"/>
     <!-- bluetooth and battery marks -->
-    <path d="M52 262 l12 10 -6 5 v-22 l6 5 -12 10" fill="none" stroke="#C9CCD1" stroke-width="2.5" stroke-linejoin="round" opacity="0.85"/>
-    <g fill="none" stroke="#C9CCD1" stroke-width="2.5" opacity="0.85"><rect x="166" y="257" width="12" height="20" rx="2"/><path d="M169 254 h6"/><path d="M169 263 h6 M169 268 h6 M169 273 h6"/></g>
+    <path d="M40 280 l12 10 -6 5 v-22 l6 5 -12 10" fill="none" stroke="#C9CCD1" stroke-width="2.5" stroke-linejoin="round" opacity="0.85"/>
+    <g fill="none" stroke="#C9CCD1" stroke-width="2.5" opacity="0.85"><rect x="178" y="275" width="12" height="20" rx="2"/><path d="M181 272 h6"/><path d="M181 281 h6 M181 286 h6 M181 291 h6"/></g>
   </g>
 </svg>

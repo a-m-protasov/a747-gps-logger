@@ -101,5 +101,13 @@
  "Yes": "是",
  "≈ %lld h of logging": "约可记录 %lld 小时",
  "Color by speed": "按速度着色",
- "Track color": "轨迹颜色"
+ "Track color": "轨迹颜色",
+ "Rename": "重命名",
+ "Save": "存储",
+ "Delete": "删除",
+ "Delete the selected items?": "删除所选项目？",
+ "Deleted tracks and waypoints won't come back after the next download.": "已删除的轨迹和航点在下次下载后不会恢复。",
+ "Select a track or waypoint": "选择轨迹或航点",
+ "Selected: %lld": "已选：%lld",
+ "Coordinates": "坐标"
 }

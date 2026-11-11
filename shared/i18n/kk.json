@@ -101,5 +101,13 @@
  "Yes": "Иә",
  "≈ %lld h of logging": "≈ %lld сағ жазу",
  "Color by speed": "Жылдамдық бойынша түс",
- "Track color": "Трек түсі"
+ "Track color": "Трек түсі",
+ "Rename": "Атын өзгерту",
+ "Save": "Сақтау",
+ "Delete": "Жою",
+ "Delete the selected items?": "Таңдалғанды жою керек пе?",
+ "Deleted tracks and waypoints won't come back after the next download.": "Жойылған тректер мен нүктелер келесі жүктеуде қайтып келмейді.",
+ "Select a track or waypoint": "Трек немесе нүкте таңдаңыз",
+ "Selected: %lld": "Таңдалды: %lld",
+ "Coordinates": "Координаттар"
 }

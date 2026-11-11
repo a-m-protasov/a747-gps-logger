@@ -1,3 +1,4 @@
+import A747Core
 import Foundation
 import SwiftUI
 
@@ -60,6 +61,8 @@ enum UI {
         style.timeZone = tz
         return Date(timeIntervalSince1970: TimeInterval(utc)).formatted(style)
     }
+
+    static func coordinates(_ p: LogPoint) -> String { String(format: "%.5f, %.5f", p.lat, p.lon) }
 
     static func day(_ isoDay: String, _ tz: TimeZone) -> String {
         let f = DateFormatter()

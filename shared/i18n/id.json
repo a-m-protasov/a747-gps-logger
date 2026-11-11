@@ -101,5 +101,13 @@
  "Yes": "Ya",
  "≈ %lld h of logging": "≈ %lld jam perekaman",
  "Color by speed": "Warna menurut kecepatan",
- "Track color": "Warna trek"
+ "Track color": "Warna trek",
+ "Rename": "Ganti nama",
+ "Save": "Simpan",
+ "Delete": "Hapus",
+ "Delete the selected items?": "Hapus item yang dipilih?",
+ "Deleted tracks and waypoints won't come back after the next download.": "Trek dan titik yang dihapus tidak akan kembali setelah unduhan berikutnya.",
+ "Select a track or waypoint": "Pilih trek atau titik",
+ "Selected: %lld": "Dipilih: %lld",
+ "Coordinates": "Koordinat"
 }

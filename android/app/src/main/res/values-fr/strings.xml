@@ -100,6 +100,14 @@
     <string name="about_n_h_of_logging">≈ %1$d h d’enregistrement</string>
     <string name="color_by_speed">Couleur selon la vitesse</string>
     <string name="track_color">Couleur du parcours</string>
+    <string name="rename">Renommer</string>
+    <string name="save">Enregistrer</string>
+    <string name="delete">Supprimer</string>
+    <string name="delete_the_selected_items">Supprimer les éléments sélectionnés ?</string>
+    <string name="deleted_tracks_and_waypoints_won_t_come_back_aft">Les parcours et points supprimés ne reviendront pas au prochain téléchargement.</string>
+    <string name="select_a_track_or_waypoint">Sélectionnez un parcours ou un point</string>
+    <string name="selected_n">Sélectionnés : %1$d</string>
+    <string name="coordinates">Coordonnées</string>
     <string name="turn_the_logger_on_and_connect_it_with_a_usb_otg">Allumez l’enregistreur et branchez-le avec un câble USB OTG, ou associez-le en Bluetooth.</string>
     <string name="connect_by_usb">Connecter en USB</string>
     <string name="connect_by_bluetooth">Connecter en Bluetooth</string>

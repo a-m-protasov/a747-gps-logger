@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -134,6 +135,8 @@ object UI {
         return f.withLocale(Locale.getDefault()).format(Instant.ofEpochSecond(utc).atZone(zone))
     }
 
+    fun coordinates(p: LogPoint) = String.format(Locale.ROOT, "%.5f, %.5f", p.lat, p.lon)
+
     fun day(d: java.time.LocalDate): String =
         DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(Locale.getDefault()).format(d)
 
@@ -148,7 +151,10 @@ object UI {
 fun MapWeb(tracks: List<List<LogPoint>>, waypoints: List<Waypoint>, modifier: Modifier = Modifier) {
     val repo = A747App.repo
     val metric = UI.isMetric
-    val data = JSONObject().apply {
+    val bySpeed = repo.trackColorBySpeed
+    val color = repo.trackColor
+    // built once per input: rebuilding (and re-sending) it on every recomposition reset the view
+    val data = remember(tracks, waypoints, metric, bySpeed, color) { JSONObject().apply {
         put("tracks", JSONArray().apply {
             for (t in tracks) {
                 val speeds = speeds(t)
@@ -163,11 +169,11 @@ fun MapWeb(tracks: List<List<LogPoint>>, waypoints: List<Waypoint>, modifier: Mo
             for (w in waypoints) put(JSONObject().put("lon", w.point.lon).put("lat", w.point.lat).put("name", w.name))
         })
         put("style", JSONObject()
-            .put("mode", if (repo.trackColorBySpeed) "speed" else "solid")
-            .put("color", repo.trackColor)
+            .put("mode", if (bySpeed) "speed" else "solid")
+            .put("color", color)
             .put("unit", if (metric) "km/h" else "mph")
             .put("factor", if (metric) 1.0 else 1 / 1.609344))
-    }.toString()
+    }.toString() }
     AndroidView(
         modifier = modifier,
         factory = { ctx ->
@@ -175,8 +181,6 @@ fun MapWeb(tracks: List<List<LogPoint>>, waypoints: List<Waypoint>, modifier: Mo
                 // WRAP_CONTENT (the default) lays the page out with a 0 px viewport height
                 layoutParams = android.view.ViewGroup.LayoutParams(
                     android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT)
-                // draw into its own texture: avoids a stale first frame seen in some compositors
-                setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
                 settings.javaScriptEnabled = true
                 settings.allowFileAccess = true
                 webChromeClient = object : android.webkit.WebChromeClient() {
@@ -187,7 +191,7 @@ fun MapWeb(tracks: List<List<LogPoint>>, waypoints: List<Waypoint>, modifier: Mo
                 }
                 webViewClient = object : WebViewClient() {
                     override fun onPageFinished(view: WebView, url: String?) {
-                        (view.tag as? String)?.let { view.evaluateJavascript("window.setData($it)", null) }
+                        (view.tag as? String)?.let { view.evaluateJavascript("window.setData($it)", null); view.setTag(MapBridge.SENT, it) }
                         view.setTag(MapBridge.LOADED, true)
                     }
 
@@ -201,13 +205,18 @@ fun MapWeb(tracks: List<List<LogPoint>>, waypoints: List<Waypoint>, modifier: Mo
         },
         update = { web ->
             web.tag = data
-            if (web.getTag(MapBridge.LOADED) == true) web.evaluateJavascript("window.setData($data)", null)
+            // send only new data: setData fits the view to the data and would undo the user's pan and zoom
+            if (web.getTag(MapBridge.LOADED) == true && web.getTag(MapBridge.SENT) != data) {
+                web.evaluateJavascript("window.setData($data)", null)
+                web.setTag(MapBridge.SENT, data)
+            }
         },
     )
 }
 
 object MapBridge {
     val LOADED = io.github.a_m_protasov.a747.R.id.map_loaded
+    val SENT = io.github.a_m_protasov.a747.R.id.map_sent
 }
 
 /** A simple area/line chart (no chart library needed). */

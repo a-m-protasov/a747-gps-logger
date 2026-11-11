@@ -100,6 +100,14 @@
     <string name="about_n_h_of_logging">≈ %1$d h zapisu</string>
     <string name="color_by_speed">Kolor według prędkości</string>
     <string name="track_color">Kolor śladu</string>
+    <string name="rename">Zmień nazwę</string>
+    <string name="save">Zapisz</string>
+    <string name="delete">Usuń</string>
+    <string name="delete_the_selected_items">Usunąć zaznaczone elementy?</string>
+    <string name="deleted_tracks_and_waypoints_won_t_come_back_aft">Usunięte ślady i punkty nie wrócą przy następnym pobraniu.</string>
+    <string name="select_a_track_or_waypoint">Wybierz ślad lub punkt</string>
+    <string name="selected_n">Zaznaczone: %1$d</string>
+    <string name="coordinates">Współrzędne</string>
     <string name="turn_the_logger_on_and_connect_it_with_a_usb_otg">Włącz logger i podłącz go kablem USB OTG albo sparuj przez Bluetooth.</string>
     <string name="connect_by_usb">Połącz przez USB</string>
     <string name="connect_by_bluetooth">Połącz przez Bluetooth</string>

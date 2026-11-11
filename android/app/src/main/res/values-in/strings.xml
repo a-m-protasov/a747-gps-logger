@@ -100,6 +100,14 @@
     <string name="about_n_h_of_logging">≈ %1$d jam perekaman</string>
     <string name="color_by_speed">Warna menurut kecepatan</string>
     <string name="track_color">Warna trek</string>
+    <string name="rename">Ganti nama</string>
+    <string name="save">Simpan</string>
+    <string name="delete">Hapus</string>
+    <string name="delete_the_selected_items">Hapus item yang dipilih?</string>
+    <string name="deleted_tracks_and_waypoints_won_t_come_back_aft">Trek dan titik yang dihapus tidak akan kembali setelah unduhan berikutnya.</string>
+    <string name="select_a_track_or_waypoint">Pilih trek atau titik</string>
+    <string name="selected_n">Dipilih: %1$d</string>
+    <string name="coordinates">Koordinat</string>
     <string name="turn_the_logger_on_and_connect_it_with_a_usb_otg">Nyalakan logger dan hubungkan dengan kabel USB OTG, atau sandingkan lewat Bluetooth.</string>
     <string name="connect_by_usb">Hubungkan lewat USB</string>
     <string name="connect_by_bluetooth">Hubungkan lewat Bluetooth</string>

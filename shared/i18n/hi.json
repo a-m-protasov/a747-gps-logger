@@ -101,5 +101,13 @@
  "Yes": "हाँ",
  "≈ %lld h of logging": "≈ %lld घंटे की रिकॉर्डिंग",
  "Color by speed": "गति के अनुसार रंग",
- "Track color": "ट्रैक का रंग"
+ "Track color": "ट्रैक का रंग",
+ "Rename": "नाम बदलें",
+ "Save": "सहेजें",
+ "Delete": "हटाएँ",
+ "Delete the selected items?": "चुने गए आइटम हटाएँ?",
+ "Deleted tracks and waypoints won't come back after the next download.": "हटाए गए ट्रैक और वेपॉइंट अगली डाउनलोड के बाद वापस नहीं आएँगे।",
+ "Select a track or waypoint": "ट्रैक या वेपॉइंट चुनें",
+ "Selected: %lld": "चुने गए: %lld",
+ "Coordinates": "निर्देशांक"
 }

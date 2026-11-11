@@ -101,5 +101,13 @@
  "Yes": "Evet",
  "≈ %lld h of logging": "≈ %lld sa kayıt",
  "Color by speed": "Hıza göre renk",
- "Track color": "Rota rengi"
+ "Track color": "Rota rengi",
+ "Rename": "Yeniden adlandır",
+ "Save": "Kaydet",
+ "Delete": "Sil",
+ "Delete the selected items?": "Seçilen öğeler silinsin mi?",
+ "Deleted tracks and waypoints won't come back after the next download.": "Silinen rotalar ve noktalar bir sonraki indirmede geri gelmez.",
+ "Select a track or waypoint": "Bir rota veya nokta seçin",
+ "Selected: %lld": "Seçilen: %lld",
+ "Coordinates": "Koordinatlar"
 }

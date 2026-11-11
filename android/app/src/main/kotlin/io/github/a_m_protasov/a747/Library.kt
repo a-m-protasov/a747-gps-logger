@@ -92,3 +92,53 @@ class Library(private val dir: File) {
         return pts.sortedBy { it.utc }.filter { seen.add(Triple(it.utc, it.lat, it.lon)) }
     }
 }
+
+/**
+ * What the user changed on top of the raw downloads: names, and deleted tracks and waypoints
+ * (same file format as on macOS). Deletions are time ranges, so a deleted track stays hidden
+ * after later downloads too.
+ */
+class LibraryEdits(private val file: File) {
+    /** Names keyed by the UTC time of a track's first point or of a waypoint. */
+    var names: Map<Long, String> = emptyMap(); private set
+    /** Deleted tracks as first..last UTC times. */
+    var deletedTracks: List<LongRange> = emptyList(); private set
+    var deletedWaypoints: Set<Long> = emptySet(); private set
+
+    init {
+        runCatching {
+            val o = JSONObject(file.readText())
+            o.optJSONObject("names")?.let { n -> names = n.keys().asSequence().associate { it.toLong() to n.getString(it) } }
+            o.optJSONArray("deletedTracks")?.let { a ->
+                deletedTracks = (0 until a.length()).map { a.getJSONArray(it).let { r -> r.getLong(0)..r.getLong(1) } }
+            }
+            o.optJSONArray("deletedWaypoints")?.let { a -> deletedWaypoints = (0 until a.length()).map(a::getLong).toSet() }
+        }
+    }
+
+    fun isDeleted(utc: Long) = deletedTracks.any { utc in it }
+
+    @Synchronized
+    fun rename(utc: Long, name: String) {
+        val n = name.trim()
+        names = if (n.isEmpty()) names - utc else names + (utc to n)
+        save()
+    }
+
+    @Synchronized
+    fun delete(tracks: List<LongRange>, waypoints: List<Long>) {
+        deletedTracks = deletedTracks + tracks
+        deletedWaypoints = deletedWaypoints + waypoints
+        save()
+    }
+
+    private fun save() {
+        val o = JSONObject()
+            .put("names", JSONObject().apply { for ((k, v) in names) put(k.toString(), v) })
+            .put("deletedTracks", JSONArray().apply { for (r in deletedTracks) put(JSONArray().put(r.first).put(r.last)) })
+            .put("deletedWaypoints", JSONArray().apply { for (w in deletedWaypoints.sorted()) put(w) })
+        val tmp = File(file.path + ".tmp")
+        tmp.writeText(o.toString(1))
+        tmp.renameTo(file)
+    }
+}

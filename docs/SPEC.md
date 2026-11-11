@@ -25,7 +25,7 @@ Two native apps, logic written twice. To keep them identical:
   enter the repository.
 
 Shared design language (palette, icon, typography, screen structure); native controls on
-each platform. Tabs: **Device · Tracks · Waypoints · Settings**.
+each platform. Tabs: **Device · Tracks · Settings** (tracks and waypoints share one list).
 
 ## Device facts that shape the design
 
@@ -67,12 +67,20 @@ each platform. Tabs: **Device · Tracks · Waypoints · Settings**.
 - Points without a fix are dropped; mirror duplicates removed.
 - Track details: start/end, duration, points, distance, avg/max speed, ascent/descent,
   map (MapLibre + OpenFreeMap tiles, no key), speed and elevation charts.
-- **Waypoints** (logger button presses) live in their own tab with list and map, not inside
-  tracks. On a track map they are an optional layer, off by default.
+- **Waypoints** (logger button presses) are separate items, not inside tracks: they sit in
+  the same day-grouped list as the tracks, and opening one centres the map on it. On a track
+  map they are an optional layer, off by default.
+- Tracks and waypoints can be renamed and deleted. Edits live in `edits.json` next to the raw
+  dumps, which stay untouched: names are keyed by the UTC time of the first point, deletions
+  are time ranges, so a deleted item does not come back with the next download.
+- macOS: the list is narrow and the map takes the rest; the width the user drags the divider
+  to is remembered. Android: the map takes 2/3 of the detail screen, outside any scrolling
+  container so pan and zoom are smooth.
 
 ### Export and sharing
 - Formats: GPX 1.1, KML, CSV, BIN (raw dump).
-- One track, a selection, or everything; waypoints exported separately.
+- One track, a selection, or everything; tracks and waypoints together in one file (in CSV
+  waypoints become one-point tracks). User names go into the files.
 - System share sheet (mail, Drive, messengers) and system save dialog (iCloud Drive on Mac,
   Google Drive via the Android document picker). No cloud SDKs, no OAuth.
 

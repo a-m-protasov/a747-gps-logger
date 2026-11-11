@@ -20,34 +20,36 @@ enum ExportFormat: String, CaseIterable, Identifiable {
 /// Builds export files into a temporary folder (for sharing) or returns their content.
 @MainActor
 enum ExportBuilder {
-    static func baseName(_ tracks: [Track]) -> String {
-        guard let first = tracks.last, let last = tracks.first else { return "a747" }
-        let a = first.name.prefix(10), b = last.name.prefix(10)
+    /// "a747-<first day>_<last day>" (local dates of the items).
+    static func baseName(_ items: [LibraryItem], model: AppModel) -> String {
+        guard let first = items.min(by: { $0.utc < $1.utc }), let last = items.max(by: { $0.utc < $1.utc }) else { return "a747" }
+        let ex = model.exporter
+        func day(_ i: LibraryItem) -> Substring {
+            switch i {
+            case .track(let t): ex.name(t.points[0]).prefix(10)
+            case .waypoint(let w): ex.name(w.point).prefix(10)
+            }
+        }
+        let a = day(first), b = day(last)
         return a == b ? "a747-\(a)" : "a747-\(a)_\(b)"
     }
 
-    static func content(_ format: ExportFormat, tracks: [Track], model: AppModel) throws -> Data {
+    /// Tracks and waypoints in one file. CSV has no place for waypoints next to tracks, so there
+    /// they become one-point tracks named after the waypoint.
+    static func content(_ format: ExportFormat, items: [LibraryItem], model: AppModel) throws -> Data {
         let ex = model.exporter
-        let pts = tracks.sorted { $0.stats.startUTC < $1.stats.startUTC }.map(\.points)
+        let tracks = items.compactMap { if case .track(let t) = $0 { t.points } else { nil } }.sorted { $0[0].utc < $1[0].utc }
+        let wpts = items.compactMap { if case .waypoint(let w) = $0 { w.point } else { nil } }.sorted { $0.utc < $1.utc }
         switch format {
-        case .gpx: return Data(ex.gpx(tracks: pts).utf8)
-        case .kml: return Data(ex.kml(tracks: pts, waypoints: []).utf8)
-        case .csv: return Data(ex.csv(tracks: pts).utf8)
+        case .gpx: return Data(ex.gpx(tracks: tracks, waypoints: wpts).utf8)
+        case .kml: return Data(ex.kml(tracks: tracks, waypoints: wpts).utf8)
+        case .csv:
+            return Data((tracks.isEmpty ? ex.csv(waypoints: wpts) : ex.csv(tracks: tracks + wpts.map { [$0] })).utf8)
         case .bin:
             guard let e = model.library.entries.max(by: { $0.downloadedAt < $1.downloadedAt }) else {
                 throw CocoaError(.fileNoSuchFile)
             }
             return try Data(contentsOf: model.library.imageURL(e))
-        }
-    }
-
-    static func waypointContent(_ format: ExportFormat, _ wpts: [Waypoint], model: AppModel) -> Data {
-        let ex = model.exporter
-        let pts = wpts.map(\.point).sorted { $0.utc < $1.utc }
-        switch format {
-        case .gpx: return Data(ex.gpx(waypoints: pts).utf8)
-        case .kml: return Data(ex.kml(tracks: [], waypoints: pts).utf8)
-        case .csv, .bin: return Data(ex.csv(waypoints: pts).utf8)
         }
     }
 

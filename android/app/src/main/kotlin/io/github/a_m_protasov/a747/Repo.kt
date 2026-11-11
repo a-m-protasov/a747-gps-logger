@@ -29,12 +29,31 @@ import java.io.File
 import java.time.LocalDate
 import java.time.ZoneId
 
-data class Track(val points: List<LogPoint>, val stats: TrackStats, val name: String, val day: LocalDate, val zone: ZoneId) {
-    val id get() = stats.id
+/** A row of the library list: tracks and waypoints together, newest first. */
+sealed interface Item {
+    val key: String
+    val utc: Long
+    val day: LocalDate
+    val zone: ZoneId
+    /** Default name: local date and time. */
+    val name: String
+    /** Name given by the user. */
+    val customName: String?
+    val title get() = customName ?: name
 }
 
-data class Waypoint(val point: LogPoint, val name: String, val zone: ZoneId) {
+data class Track(val points: List<LogPoint>, val stats: TrackStats, override val name: String, override val customName: String?,
+                 override val day: LocalDate, override val zone: ZoneId) : Item {
+    val id get() = stats.id
+    override val key get() = "t:$id"
+    override val utc get() = stats.startUtc
+}
+
+data class Waypoint(val point: LogPoint, override val name: String, override val customName: String?,
+                    override val day: LocalDate, override val zone: ZoneId) : Item {
     val id get() = "${point.utc}-${point.lat}-${point.lon}"
+    override val key get() = "w:$id"
+    override val utc get() = point.utc
 }
 
 enum class Link { USB, BLUETOOTH }
@@ -51,12 +70,15 @@ sealed interface DeviceState {
 class Repo(private val ctx: Context) {
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     val tz = TimeZoneDB(ctx.assets.open("timezones.bin").use { it.readBytes() })
-    val exporter = Exporter(tz)
     val library = Library(File(ctx.filesDir, "library"))
+    val edits = LibraryEdits(File(ctx.filesDir, "library/edits.json"))
+    /** Exports use the names the user gave. */
+    val exporter get() = Exporter(tz, edits.names)
     private val prefs = ctx.getSharedPreferences("settings", Context.MODE_PRIVATE)
 
     val tracks = MutableStateFlow<List<Track>>(emptyList())
     val waypoints = MutableStateFlow<List<Waypoint>>(emptyList())
+    val items = MutableStateFlow<List<Item>>(emptyList())
     private val _device = MutableStateFlow<DeviceState>(DeviceState.Disconnected)
     val device: StateFlow<DeviceState> = _device
     val live = MutableStateFlow<LiveStatus?>(null)
@@ -86,14 +108,35 @@ class Repo(private val ctx: Context) {
 
     fun reload() {
         scope.launch {
-            val (points, wpts) = library.load(System.currentTimeMillis() / 1000)
-            tracks.value = Tracks.split(points, splitGapMinutes * 60L).map { t ->
+            val (all, allWpts) = library.load(System.currentTimeMillis() / 1000)
+            val points = all.filterNot { edits.isDeleted(it.utc) }
+            val wpts = allWpts.filterNot { it.utc in edits.deletedWaypoints }
+            val ex = exporter
+            fun day(p: LogPoint, zone: ZoneId) = java.time.Instant.ofEpochSecond(p.utc).atZone(zone).toLocalDate()
+            val t = Tracks.split(points, splitGapMinutes * 60L).map { t ->
                 val zone = tz.zone(t[0].lat, t[0].lon)
-                Track(t, Tracks.stats(t), exporter.name(t[0]),
-                    java.time.Instant.ofEpochSecond(t[0].utc).atZone(zone).toLocalDate(), zone)
+                Track(t, Tracks.stats(t), ex.name(t[0]), edits.names[t[0].utc], day(t[0], zone), zone)
             }.reversed()
-            waypoints.value = wpts.map { Waypoint(it, exporter.name(it), tz.zone(it.lat, it.lon)) }.reversed()
+            val w = wpts.map {
+                val zone = tz.zone(it.lat, it.lon)
+                Waypoint(it, ex.name(it), edits.names[it.utc], day(it, zone), zone)
+            }.reversed()
+            tracks.value = t
+            waypoints.value = w
+            items.value = (t + w).sortedByDescending { it.utc }
         }
+    }
+
+    /** Sets (or, with an empty string, clears) the name of a track or waypoint. */
+    fun rename(item: Item, name: String) {
+        edits.rename(if (item is Track) item.points[0].utc else (item as Waypoint).point.utc, name)
+        reload()
+    }
+
+    fun delete(items: List<Item>) {
+        edits.delete(items.filterIsInstance<Track>().map { it.stats.startUtc..it.stats.endUtc },
+            items.filterIsInstance<Waypoint>().map { it.point.utc })
+        reload()
     }
 
     private fun info(): DeviceInfo? = when (val d = _device.value) {

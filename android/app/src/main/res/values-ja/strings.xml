@@ -100,6 +100,14 @@
     <string name="about_n_h_of_logging">約%1$d時間記録可能</string>
     <string name="color_by_speed">速度で色分け</string>
     <string name="track_color">トラックの色</string>
+    <string name="rename">名前を変更</string>
+    <string name="save">保存</string>
+    <string name="delete">削除</string>
+    <string name="delete_the_selected_items">選択した項目を削除しますか？</string>
+    <string name="deleted_tracks_and_waypoints_won_t_come_back_aft">削除したトラックとウェイポイントは次回のダウンロードでも戻りません。</string>
+    <string name="select_a_track_or_waypoint">トラックかウェイポイントを選択</string>
+    <string name="selected_n">選択中：%1$d</string>
+    <string name="coordinates">座標</string>
     <string name="turn_the_logger_on_and_connect_it_with_a_usb_otg">ロガーの電源を入れ、USB OTGケーブルで接続するかBluetoothでペアリングしてください。</string>
     <string name="connect_by_usb">USBで接続</string>
     <string name="connect_by_bluetooth">Bluetoothで接続</string>

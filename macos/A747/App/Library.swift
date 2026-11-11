@@ -84,3 +84,27 @@ struct LibraryStore {
         return pts.sorted { $0.utc < $1.utc }.filter { seen.insert(Key(t: $0.utc, lat: $0.lat, lon: $0.lon)).inserted }
     }
 }
+
+/// What the user changed on top of the raw downloads: names, and deleted tracks and waypoints.
+/// Deletions are time ranges, so a deleted track stays hidden after later downloads too.
+struct LibraryEdits: Codable {
+    /// Names keyed by the UTC time of a track's first point or of a waypoint.
+    var names: [Int64: String] = [:]
+    /// Deleted tracks as [first, last] UTC times.
+    var deletedTracks: [[Int64]] = []
+    var deletedWaypoints: Set<Int64> = []
+
+    static func load(_ dir: URL) -> LibraryEdits {
+        guard let d = try? Data(contentsOf: dir.appending(path: "edits.json")),
+              let e = try? JSONDecoder().decode(LibraryEdits.self, from: d) else { return LibraryEdits() }
+        return e
+    }
+
+    func save(_ dir: URL) {
+        let enc = JSONEncoder()
+        enc.outputFormatting = [.prettyPrinted, .sortedKeys]
+        try? enc.encode(self).write(to: dir.appending(path: "edits.json"), options: .atomic)
+    }
+
+    func isDeleted(point utc: Int64) -> Bool { deletedTracks.contains { $0[0] <= utc && utc <= $0[1] } }
+}

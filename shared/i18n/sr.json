@@ -101,5 +101,13 @@
  "Yes": "Да",
  "≈ %lld h of logging": "≈ %lld h записивања",
  "Color by speed": "Боја према брзини",
- "Track color": "Боја трасе"
+ "Track color": "Боја трасе",
+ "Rename": "Преименуј",
+ "Save": "Сачувај",
+ "Delete": "Обриши",
+ "Delete the selected items?": "Обрисати изабрано?",
+ "Deleted tracks and waypoints won't come back after the next download.": "Обрисане трасе и тачке се неће вратити при следећем преузимању.",
+ "Select a track or waypoint": "Изаберите трасу или тачку",
+ "Selected: %lld": "Изабрано: %lld",
+ "Coordinates": "Координате"
 }

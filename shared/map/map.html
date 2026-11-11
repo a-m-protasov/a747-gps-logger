@@ -104,7 +104,8 @@ function apply(d) {
     .concat((d.waypoints || []).map(w => [w.lon, w.lat]));
   if (pts.length) {
     const b = pts.reduce((b, p) => b.extend(p), new maplibregl.LngLatBounds(pts[0], pts[0]));
-    map.fitBounds(b, { padding: 40, maxZoom: 16, duration: 0 });
+    // a single waypoint: close enough to see the street, far enough to see where it is
+    map.fitBounds(b, { padding: 40, maxZoom: pts.length === 1 ? 15 : 16, duration: 0 });
   }
 }
 

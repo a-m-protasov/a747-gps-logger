@@ -101,5 +101,13 @@
  "Yes": "Sim",
  "≈ %lld h of logging": "≈ %lld h de gravação",
  "Color by speed": "Cor pela velocidade",
- "Track color": "Cor da trilha"
+ "Track color": "Cor da trilha",
+ "Rename": "Renomear",
+ "Save": "Salvar",
+ "Delete": "Apagar",
+ "Delete the selected items?": "Apagar os itens selecionados?",
+ "Deleted tracks and waypoints won't come back after the next download.": "Trilhas e pontos apagados não voltarão no próximo download.",
+ "Select a track or waypoint": "Selecione uma trilha ou um ponto",
+ "Selected: %lld": "Selecionados: %lld",
+ "Coordinates": "Coordenadas"
 }
