@@ -59,14 +59,14 @@ def scale(im: Image.Image, width=None, height=None) -> Image.Image:
 def main(src: str):
     load = lambda n: Image.open(os.path.join(src, n + ".png")).convert("RGBA")
 
-    # A Mac window and, a little lower, a phone next to it
+    # A Mac window and a phone of the same height next to it, tops and bottoms aligned
     mac = scale(load("mac-track"), width=1900)
-    ph = phone(load("android-track"), 1120)
+    ph = phone(load("android-track"), mac.height)
     m = 70
-    W, H = m + mac.width + 50 + ph.width + m, m + mac.height + 200 + m
+    W, H = m + mac.width + 60 + ph.width + m, m + mac.height + m
     c = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     shadowed(c, mac, (m, m))
-    shadowed(c, ph, (W - m - ph.width, H - m - ph.height), blur=34, offset=18, alpha=0.4)
+    shadowed(c, ph, (W - m - ph.width, m))
     c.save(os.path.join(OUT, "hero.png"), optimize=True)
 
     # Adding waypoints: the Mac sheet and two Android screens side by side
