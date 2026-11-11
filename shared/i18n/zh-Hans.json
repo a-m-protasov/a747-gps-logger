@@ -126,5 +126,20 @@
  "Location access is needed to record a track.": "记录轨迹需要位置权限。",
  "Recording on this phone": "在此手机上记录",
  "A point every %lld s": "每 %lld 秒一个点",
- "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker 等应用可以开始和停止记录：Send Intent，目标 Activity，使用以下操作之一："
+ "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker 等应用可以开始和停止记录：Send Intent，目标 Activity，使用以下操作之一：",
+ "Add waypoint": "添加航点",
+ "Edit waypoint": "编辑航点",
+ "Move the map so that the cross is on the place.": "移动地图，使十字准星对准该位置。",
+ "Name": "名称",
+ "Icon": "图标",
+ "No icon": "无图标",
+ "Add": "添加",
+ "Next": "下一步",
+ "My location": "我的位置",
+ "Appearance": "外观",
+ "Light": "浅色",
+ "Dark": "深色",
+ "Language": "语言",
+ "The new language is used after a restart.": "新语言将在重启后生效。",
+ "Restart now": "立即重启"
 }

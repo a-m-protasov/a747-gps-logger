@@ -8,6 +8,8 @@ struct LibraryView: View {
     @State private var renaming: LibraryItem?
     @State private var newName = ""
     @State private var deleting: Set<String> = []
+    @State private var adding = false
+    @State private var editingWaypoint: Waypoint?
 
     private var chosen: [LibraryItem] { model.items.filter { selection.contains($0.id) } }
 
@@ -27,12 +29,22 @@ struct LibraryView: View {
         .toolbar {
             Button { model.importWithPanel() } label: { Label("Import files…", systemImage: "square.and.arrow.down") }
                 .help("Import files…")
+            Button { adding = true } label: { Label("Add waypoint", systemImage: "mappin.and.ellipse") }
+                .help("Add waypoint")
             ExportMenu(title: selection.isEmpty ? "Export all" : "Export selected", formats: ExportFormat.allCases) { f in
                 let items = selection.isEmpty ? model.items : chosen
                 return try ExportBuilder.files(f, items: items, model: model)
             }
             .disabled(model.items.isEmpty)
         }
+        .sheet(isPresented: $adding) {
+            // the map around the new waypoint: what is selected, or else all waypoints
+            let items = chosen
+            let tracks = items.compactMap { if case .track(let t) = $0 { t.points } else { nil } }
+            let wpts = items.compactMap { if case .waypoint(let w) = $0 { w } else { nil } }
+            WaypointEditor(tracks: tracks, waypoints: items.isEmpty ? model.waypoints : wpts) { selection = [$0] }
+        }
+        .sheet(item: $editingWaypoint) { WaypointEditor(editing: $0) }
         .alert("Rename", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
             TextField(renaming.map(defaultName) ?? "", text: $newName)
             Button("Save") { if let r = renaming { model.rename(r, to: newName) }; renaming = nil }
@@ -80,7 +92,11 @@ struct LibraryView: View {
             }
             .contextMenu(forSelectionType: String.self) { ids in
                 if ids.count == 1, let item = model.items.first(where: { ids.contains($0.id) }) {
-                    Button("Rename") { startRename(item) }
+                    if case .waypoint(let w) = item {
+                        Button("Edit waypoint") { editingWaypoint = w }
+                    } else {
+                        Button("Rename") { startRename(item) }
+                    }
                 }
                 if !ids.isEmpty {
                     Button("Delete", role: .destructive) { deleting = ids }
@@ -107,7 +123,7 @@ struct LibraryView: View {
         } else if !tracks.isEmpty {
             TrackDetail(tracks: tracks, selectedWaypoints: wpts)
         } else if wpts.count == 1, let w = wpts.first {
-            WaypointDetail(waypoint: w)
+            WaypointDetail(waypoint: w) { editingWaypoint = w }
         } else {
             MapView(tracks: [], waypoints: wpts)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -184,7 +200,13 @@ struct ItemRow: View {
                 let size = "\(UI.distance(t.stats.distanceM)) · \(UI.duration(t.stats.durationS))"
                 texts(t.customName ?? span, t.customName == nil ? size : "\(span) · \(size)")
             case .waypoint(let w):
-                icon("mappin", .accentWaypoint)
+                if let e = w.icon {
+                    Text(e).font(.system(size: 15))
+                        .frame(width: 26, height: 26)
+                        .background(Color.accentWaypoint.opacity(0.15), in: .circle)
+                } else {
+                    icon("mappin", .accentWaypoint)
+                }
                 let time = UI.time(w.point.utc, w.timeZone)
                 texts(w.customName ?? time, w.customName == nil ? UI.coordinates(w.point) : "\(time) · \(UI.coordinates(w.point))")
             }
@@ -217,6 +239,7 @@ struct ItemRow: View {
 
 struct WaypointDetail: View {
     let waypoint: Waypoint
+    var onEdit: () -> Void = {}
 
     var body: some View {
         VStack(spacing: 0) {
@@ -230,6 +253,10 @@ struct WaypointDetail: View {
             .padding(20)
         }
         .navigationTitle(waypoint.title)
+        .toolbar {
+            Button(action: onEdit) { Label("Edit waypoint", systemImage: "pencil") }
+                .help("Edit waypoint")
+        }
     }
 }
 

@@ -126,5 +126,20 @@
  "Location access is needed to record a track.": "Zum Aufzeichnen wird Zugriff auf den Standort benötigt.",
  "Recording on this phone": "Aufzeichnung auf diesem Telefon",
  "A point every %lld s": "Ein Punkt alle %lld s",
- "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker und andere Apps können die Aufzeichnung starten und beenden: Send Intent, Ziel Activity, eine dieser Aktionen:"
+ "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker und andere Apps können die Aufzeichnung starten und beenden: Send Intent, Ziel Activity, eine dieser Aktionen:",
+ "Add waypoint": "Wegpunkt hinzufügen",
+ "Edit waypoint": "Wegpunkt bearbeiten",
+ "Move the map so that the cross is on the place.": "Verschiebe die Karte, bis das Kreuz auf dem Ort liegt.",
+ "Name": "Name",
+ "Icon": "Symbol",
+ "No icon": "Kein Symbol",
+ "Add": "Hinzufügen",
+ "Next": "Weiter",
+ "My location": "Mein Standort",
+ "Appearance": "Erscheinungsbild",
+ "Light": "Hell",
+ "Dark": "Dunkel",
+ "Language": "Sprache",
+ "The new language is used after a restart.": "Die neue Sprache gilt nach einem Neustart.",
+ "Restart now": "Jetzt neu starten"
 }

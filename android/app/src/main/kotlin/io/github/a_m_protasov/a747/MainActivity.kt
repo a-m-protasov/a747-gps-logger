@@ -17,7 +17,12 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import io.github.a_m_protasov.a747.device.BluetoothTransport
@@ -27,6 +32,8 @@ import io.github.a_m_protasov.a747.ui.A747Theme
 import kotlinx.coroutines.launch
 
 class A747App : Application() {
+    override fun attachBaseContext(base: Context) = super.attachBaseContext(AppLocale.wrap(base))
+
     override fun onCreate() {
         super.onCreate()
         repo = Repo(this)
@@ -61,6 +68,8 @@ class MainActivity : ComponentActivity() {
 
     private val askNotifications = registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
+    override fun attachBaseContext(base: Context) = super.attachBaseContext(AppLocale.wrap(base))
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -70,7 +79,14 @@ class MainActivity : ComponentActivity() {
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) askNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
         setContent {
-            A747Theme {
+            val theme by repo.theme.collectAsState()
+            val dark = when (theme) { "light" -> false; "dark" -> true; else -> isSystemInDarkTheme() }
+            // status and navigation bar icons follow the app's theme, not only the system's
+            LaunchedEffect(dark) {
+                val style = SystemBarStyle.auto(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT) { dark }
+                enableEdgeToEdge(style, style)
+            }
+            A747Theme(dark) {
                 A747Root(
                     onConnectUsb = ::connectUsb,
                     pairedDevices = ::pairedDevices,

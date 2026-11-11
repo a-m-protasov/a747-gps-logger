@@ -126,5 +126,20 @@
  "Location access is needed to record a track.": "يلزم الوصول إلى الموقع لتسجيل مسار.",
  "Recording on this phone": "التسجيل على هذا الهاتف",
  "A point every %lld s": "نقطة كل %lld ث",
- "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "يمكن لـ Tasker والتطبيقات الأخرى بدء التسجيل وإيقافه: Send Intent، الهدف Activity، وأحد هذه الإجراءات:"
+ "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "يمكن لـ Tasker والتطبيقات الأخرى بدء التسجيل وإيقافه: Send Intent، الهدف Activity، وأحد هذه الإجراءات:",
+ "Add waypoint": "إضافة نقطة",
+ "Edit waypoint": "تعديل النقطة",
+ "Move the map so that the cross is on the place.": "حرّك الخريطة حتى تقع العلامة على المكان.",
+ "Name": "الاسم",
+ "Icon": "الأيقونة",
+ "No icon": "بلا أيقونة",
+ "Add": "إضافة",
+ "Next": "التالي",
+ "My location": "موقعي",
+ "Appearance": "المظهر",
+ "Light": "فاتح",
+ "Dark": "داكن",
+ "Language": "اللغة",
+ "The new language is used after a restart.": "تُطبَّق اللغة الجديدة بعد إعادة التشغيل.",
+ "Restart now": "إعادة التشغيل الآن"
 }

@@ -2,4 +2,8 @@
 <resources>
     <item name="map_loaded" type="id" />
     <item name="map_sent" type="id" />
+    <item name="map_theme" type="id" />
+    <item name="map_theme_sent" type="id" />
+    <item name="map_picking" type="id" />
+    <item name="map_picking_sent" type="id" />
 </resources>

@@ -126,5 +126,20 @@
  "Location access is needed to record a track.": "Трек жазу үшін орналасуға рұқсат керек.",
  "Recording on this phone": "Осы телефонда жазу",
  "A point every %lld s": "Әр %lld с сайын нүкте",
- "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker және басқа қолданбалар жазуды қосып-өшіре алады: Send Intent, мақсаты Activity, мына әрекеттердің бірі:"
+ "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker және басқа қолданбалар жазуды қосып-өшіре алады: Send Intent, мақсаты Activity, мына әрекеттердің бірі:",
+ "Add waypoint": "Нүкте қосу",
+ "Edit waypoint": "Нүктені өзгерту",
+ "Move the map so that the cross is on the place.": "Айқыш керекті орында болатындай картаны жылжытыңыз.",
+ "Name": "Атауы",
+ "Icon": "Белгіше",
+ "No icon": "Белгішесіз",
+ "Add": "Қосу",
+ "Next": "Әрі қарай",
+ "My location": "Менің орным",
+ "Appearance": "Көрінісі",
+ "Light": "Ашық",
+ "Dark": "Қараңғы",
+ "Language": "Тіл",
+ "The new language is used after a restart.": "Жаңа тіл қайта іске қосқаннан кейін қолданылады.",
+ "Restart now": "Қайта іске қосу"
 }

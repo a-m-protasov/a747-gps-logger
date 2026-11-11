@@ -17,7 +17,9 @@ struct LibraryStore {
     private(set) var entries: [Entry] = []
 
     init(dir: URL? = nil) {
-        let base = dir ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        // `-libraryDir <path>` opens another library (used for screenshots with synthetic data)
+        let other = UserDefaults.standard.string(forKey: "libraryDir").map { URL(fileURLWithPath: $0, isDirectory: true) }
+        let base = dir ?? other ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appending(path: "A747 GPS Logger", directoryHint: .isDirectory)
         self.dir = base
         try? FileManager.default.createDirectory(at: base.appending(path: "images"), withIntermediateDirectories: true)
@@ -111,6 +113,14 @@ struct LibraryStore {
         return url
     }
 
+    /// Waypoints the user added by hand live in one file, `tracks/added-waypoints.csv`.
+    func addWaypoint(_ p: LogPoint) throws {
+        try FileManager.default.createDirectory(at: tracksDir, withIntermediateDirectories: true)
+        let url = tracksDir.appending(path: "added-waypoints.csv")
+        let old = (try? String(contentsOf: url, encoding: .utf8)).map { PointsFile.decode($0).waypoints } ?? []
+        try Data(PointsFile.encode(track: [], waypoints: old + [p]).utf8).write(to: url, options: .atomic)
+    }
+
     static func dedupe(_ pts: [LogPoint]) -> [LogPoint] {
         struct Key: Hashable { let t: Int64; let lat: Double; let lon: Double }
         var seen = Set<Key>()
@@ -118,7 +128,8 @@ struct LibraryStore {
     }
 }
 
-/// What the user changed on top of the raw downloads: names, and deleted tracks and waypoints.
+/// What the user changed on top of the raw downloads: names, waypoint icons, and deleted tracks
+/// and waypoints.
 /// Deletions are time ranges, so a deleted track stays hidden after later downloads too.
 struct LibraryEdits: Codable {
     /// Names keyed by the UTC time of a track's first point or of a waypoint.
@@ -126,6 +137,19 @@ struct LibraryEdits: Codable {
     /// Deleted tracks as [first, last] UTC times.
     var deletedTracks: [[Int64]] = []
     var deletedWaypoints: Set<Int64> = []
+    /// Icons (an emoji from ``WaypointIcons``) keyed by the UTC time of a waypoint.
+    var icons: [Int64: String] = [:]
+
+    init() {}
+
+    // keys missing from older files keep their defaults
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        names = try c.decodeIfPresent([Int64: String].self, forKey: .names) ?? [:]
+        deletedTracks = try c.decodeIfPresent([[Int64]].self, forKey: .deletedTracks) ?? []
+        deletedWaypoints = try c.decodeIfPresent(Set<Int64>.self, forKey: .deletedWaypoints) ?? []
+        icons = try c.decodeIfPresent([Int64: String].self, forKey: .icons) ?? [:]
+    }
 
     static func load(_ dir: URL) -> LibraryEdits {
         guard let d = try? Data(contentsOf: dir.appending(path: "edits.json")),

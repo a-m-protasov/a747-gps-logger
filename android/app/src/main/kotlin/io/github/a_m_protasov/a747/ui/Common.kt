@@ -1,6 +1,10 @@
 package io.github.a_m_protasov.a747.ui
 
 import android.annotation.SuppressLint
+import android.icu.text.MeasureFormat
+import android.icu.util.Measure
+import android.icu.util.MeasureUnit
+import android.icu.util.ULocale
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -52,9 +56,11 @@ import java.util.Locale
 val Brand = Color(0xFF1F8A70)
 val WaypointColor = Color(0xFFF2994A)
 
+/** Whether the app shows its dark theme (chosen in Settings, or the system's). */
+val LocalDark = androidx.compose.runtime.staticCompositionLocalOf { false }
+
 @Composable
-fun A747Theme(content: @Composable () -> Unit) {
-    val dark = isSystemInDarkTheme()
+fun A747Theme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     // brand green on neutral surfaces (the macOS app uses the same palette)
     val scheme = if (dark) darkColorScheme(
         primary = Color(0xFF6ED3B5), onPrimary = Color(0xFF00382B), primaryContainer = Color(0xFF0F5C4A),
@@ -69,7 +75,9 @@ fun A747Theme(content: @Composable () -> Unit) {
         background = Color(0xFFFCFCFC), surface = Color(0xFFFCFCFC), surfaceContainer = Color(0xFFF2F3F3),
         surfaceContainerLow = Color(0xFFF6F7F7), surfaceContainerHigh = Color(0xFFECEDED),
     )
-    MaterialTheme(colorScheme = scheme, content = content)
+    androidx.compose.runtime.CompositionLocalProvider(LocalDark provides dark) {
+        MaterialTheme(colorScheme = scheme, content = content)
+    }
 }
 
 @Composable
@@ -110,23 +118,39 @@ object UI {
             else -> Locale.getDefault().country !in setOf("US", "LR", "MM", "GB")
         }
 
-    private fun num(x: Double, decimals: Int) = String.format(Locale.getDefault(), "%.${decimals}f", x)
-
-    fun distance(m: Double): String = if (metric) {
-        if (m >= 1000) "${num(m / 1000, 1)} km" else "${num(m, 0)} m"
-    } else {
-        if (m >= 1609) "${num(m / 1609.344, 1)} mi" else "${num(m * 3.28084, 0)} ft"
+    /** A value with its unit, abbreviated in the app's language ("12,3 км", "5 h 2 min"). */
+    private fun measure(v: Number, unit: MeasureUnit, decimals: Int): String {
+        val nf = android.icu.text.NumberFormat.getInstance(ULocale.getDefault())
+            .apply { minimumFractionDigits = decimals; maximumFractionDigits = decimals }
+        return MeasureFormat.getInstance(ULocale.getDefault(), MeasureFormat.FormatWidth.SHORT, nf).format(Measure(v, unit))
     }
 
-    fun height(m: Double) = if (metric) "${num(m, 0)} m" else "${num(m * 3.28084, 0)} ft"
-    fun speed(kmh: Double) = if (metric) "${num(kmh, 1)} km/h" else "${num(kmh / 1.609344, 1)} mph"
+    fun distance(m: Double): String = if (metric) {
+        if (m >= 1000) measure(m / 1000, MeasureUnit.KILOMETER, 1) else measure(m, MeasureUnit.METER, 0)
+    } else {
+        if (m >= 1609) measure(m / 1609.344, MeasureUnit.MILE, 1) else measure(m * 3.28084, MeasureUnit.FOOT, 0)
+    }
+
+    fun height(m: Double) = if (metric) measure(m, MeasureUnit.METER, 0) else measure(m * 3.28084, MeasureUnit.FOOT, 0)
+    fun speed(kmh: Double) =
+        if (metric) measure(kmh, MeasureUnit.KILOMETER_PER_HOUR, 1) else measure(kmh / 1.609344, MeasureUnit.MILE_PER_HOUR, 1)
+
+    /** "km/h" or "mph" in the app's language, for the map's legend. */
+    fun speedUnit(): String {
+        val u = if (metric) MeasureUnit.KILOMETER_PER_HOUR else MeasureUnit.MILE_PER_HOUR
+        // the unit as it is written next to a number (the display name can be longer: "km/hour")
+        return MeasureFormat.getInstance(ULocale.getDefault(), MeasureFormat.FormatWidth.SHORT).format(Measure(0, u))
+            .replace(Regex("[\\p{Nd}\\s]+"), " ").trim()
+    }
     fun speedValue(kmh: Double) = if (metric) kmh else kmh / 1.609344
     fun heightValue(m: Double) = if (metric) m else m * 3.28084
 
     fun duration(s: Long): String {
         val h = s / 3600
         val m = (s % 3600) / 60
-        return if (h > 0) "$h h $m min" else "$m min"
+        val f = MeasureFormat.getInstance(ULocale.getDefault(), MeasureFormat.FormatWidth.SHORT)
+        return if (h > 0) f.formatMeasures(Measure(h, MeasureUnit.HOUR), Measure(m, MeasureUnit.MINUTE))
+        else f.format(Measure(m, MeasureUnit.MINUTE))
     }
 
     fun time(utc: Long, zone: ZoneId, withDate: Boolean = false): String {
@@ -148,13 +172,19 @@ object UI {
 /** The shared MapLibre page (shared/map/map.html) with OpenFreeMap tiles. */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-fun MapWeb(tracks: List<List<LogPoint>>, waypoints: List<Waypoint>, modifier: Modifier = Modifier) {
+fun MapWeb(tracks: List<List<LogPoint>>, waypoints: List<Waypoint>, modifier: Modifier = Modifier,
+           /** Shows a cross at the centre, whose place [controller] reads. */
+           picking: Boolean = false, controller: MapController? = null,
+           /** Room kept free at the bottom when the map fits the data, in dp. */
+           bottomInset: Int = 0) {
     val repo = A747App.repo
+    val theme = if (LocalDark.current) "dark" else "light"
     val metric = UI.isMetric
     val bySpeed = repo.trackColorBySpeed
     val color = repo.trackColor
     // built once per input: rebuilding (and re-sending) it on every recomposition reset the view
-    val data = remember(tracks, waypoints, metric, bySpeed, color) { JSONObject().apply {
+    val data = remember(tracks, waypoints, metric, bySpeed, color, bottomInset) { JSONObject().apply {
+        put("bottomInset", bottomInset)
         put("tracks", JSONArray().apply {
             for (t in tracks) {
                 val speeds = speeds(t)
@@ -166,12 +196,13 @@ fun MapWeb(tracks: List<List<LogPoint>>, waypoints: List<Waypoint>, modifier: Mo
             }
         })
         put("waypoints", JSONArray().apply {
-            for (w in waypoints) put(JSONObject().put("lon", w.point.lon).put("lat", w.point.lat).put("name", w.title))
+            for (w in waypoints) put(JSONObject().put("lon", w.point.lon).put("lat", w.point.lat).put("name", w.title)
+                .apply { w.icon?.let { put("icon", it) } })
         })
         put("style", JSONObject()
             .put("mode", if (bySpeed) "speed" else "solid")
             .put("color", color)
-            .put("unit", if (metric) "km/h" else "mph")
+            .put("unit", UI.speedUnit())
             .put("factor", if (metric) 1.0 else 1 / 1.609344))
     }.toString() }
     AndroidView(
@@ -182,6 +213,8 @@ fun MapWeb(tracks: List<List<LogPoint>>, waypoints: List<Waypoint>, modifier: Mo
                 layoutParams = android.view.ViewGroup.LayoutParams(
                     android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT)
                 settings.javaScriptEnabled = true
+                // no orange focus frame around the map after typing in a dialog
+                defaultFocusHighlightEnabled = false
                 settings.allowFileAccess = true
                 webChromeClient = object : android.webkit.WebChromeClient() {
                     override fun onConsoleMessage(m: android.webkit.ConsoleMessage): Boolean {
@@ -193,6 +226,7 @@ fun MapWeb(tracks: List<List<LogPoint>>, waypoints: List<Waypoint>, modifier: Mo
                     override fun onPageFinished(view: WebView, url: String?) {
                         (view.tag as? String)?.let { view.evaluateJavascript("window.setData($it)", null); view.setTag(MapBridge.SENT, it) }
                         view.setTag(MapBridge.LOADED, true)
+                        sendState(view)
                     }
 
                     override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
@@ -200,11 +234,17 @@ fun MapWeb(tracks: List<List<LogPoint>>, waypoints: List<Waypoint>, modifier: Mo
                         return true
                     }
                 }
-                loadUrl("file:///android_asset/map.html")
+                controller?.web = this
+                setTag(MapBridge.THEME_SENT, theme)
+                loadUrl("file:///android_asset/map.html?theme=$theme")
             }
         },
         update = { web ->
+            controller?.web = web
             web.tag = data
+            web.setTag(MapBridge.THEME, theme)
+            web.setTag(MapBridge.PICKING, picking)
+            if (web.getTag(MapBridge.LOADED) == true) sendState(web)
             // send only new data: setData fits the view to the data and would undo the user's pan and zoom
             if (web.getTag(MapBridge.LOADED) == true && web.getTag(MapBridge.SENT) != data) {
                 web.evaluateJavascript("window.setData($data)", null)
@@ -214,9 +254,42 @@ fun MapWeb(tracks: List<List<LogPoint>>, waypoints: List<Waypoint>, modifier: Mo
     )
 }
 
+/** Theme and the picking cross, sent when they change. */
+private fun sendState(web: WebView) {
+    val theme = web.getTag(MapBridge.THEME) as? String
+    if (theme != null && web.getTag(MapBridge.THEME_SENT) != theme) {
+        web.evaluateJavascript("window.setTheme('$theme')", null)
+        web.setTag(MapBridge.THEME_SENT, theme)
+    }
+    val picking = web.getTag(MapBridge.PICKING) == true
+    if (web.getTag(MapBridge.PICKING_SENT) != picking) {
+        web.evaluateJavascript("window.setPicking($picking)", null)
+        web.setTag(MapBridge.PICKING_SENT, picking)
+    }
+}
+
 object MapBridge {
     val LOADED = io.github.a_m_protasov.a747.R.id.map_loaded
     val SENT = io.github.a_m_protasov.a747.R.id.map_sent
+    val THEME = io.github.a_m_protasov.a747.R.id.map_theme
+    val THEME_SENT = io.github.a_m_protasov.a747.R.id.map_theme_sent
+    val PICKING = io.github.a_m_protasov.a747.R.id.map_picking
+    val PICKING_SENT = io.github.a_m_protasov.a747.R.id.map_picking_sent
+}
+
+/** Reads the centre of the map (where the picking cross is) and moves the map. */
+class MapController {
+    var web: WebView? = null
+
+    fun center(done: (lat: Double, lon: Double) -> Unit) {
+        web?.evaluateJavascript("JSON.stringify(window.center())") { r ->
+            // the result is the JSON of the returned string
+            runCatching { JSONArray(org.json.JSONTokener(r).nextValue() as String) }.getOrNull()
+                ?.let { done(it.getDouble(0), it.getDouble(1)) }
+        }
+    }
+
+    fun goTo(lat: Double, lon: Double) { web?.evaluateJavascript("window.goTo($lat, $lon)", null) }
 }
 
 /** A simple area/line chart (no chart library needed). */

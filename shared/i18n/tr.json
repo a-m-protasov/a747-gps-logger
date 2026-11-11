@@ -126,5 +126,20 @@
  "Location access is needed to record a track.": "Rota kaydetmek için konum erişimi gerekir.",
  "Recording on this phone": "Bu telefonda kayıt",
  "A point every %lld s": "Her %lld sn'de bir nokta",
- "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker ve diğer uygulamalar kaydı başlatıp durdurabilir: Send Intent, hedef Activity ve şu eylemlerden biri:"
+ "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker ve diğer uygulamalar kaydı başlatıp durdurabilir: Send Intent, hedef Activity ve şu eylemlerden biri:",
+ "Add waypoint": "Nokta ekle",
+ "Edit waypoint": "Noktayı düzenle",
+ "Move the map so that the cross is on the place.": "Artı işareti yerin üzerine gelene kadar haritayı kaydırın.",
+ "Name": "Ad",
+ "Icon": "Simge",
+ "No icon": "Simge yok",
+ "Add": "Ekle",
+ "Next": "İleri",
+ "My location": "Konumum",
+ "Appearance": "Görünüm",
+ "Light": "Açık",
+ "Dark": "Koyu",
+ "Language": "Dil",
+ "The new language is used after a restart.": "Yeni dil yeniden başlatınca uygulanır.",
+ "Restart now": "Şimdi yeniden başlat"
 }

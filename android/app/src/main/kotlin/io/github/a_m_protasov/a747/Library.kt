@@ -121,6 +121,17 @@ class Library(private val dir: File) {
         return File(tracksDir, "phone-$startUtc.csv").apply { writeText(PointsFile.HEADER) }
     }
 
+    /** Waypoints the user added by hand live in one file, `tracks/added-waypoints.csv`. */
+    @Synchronized
+    fun addWaypoint(p: LogPoint) {
+        tracksDir.mkdirs()
+        val f = File(tracksDir, "added-waypoints.csv")
+        val old = runCatching { PointsFile.decode(f.readText()).second }.getOrDefault(emptyList())
+        val tmp = File(tracksDir, f.name + ".tmp")
+        tmp.writeText(PointsFile.encode(emptyList(), old + p))
+        tmp.renameTo(f)
+    }
+
     fun dedupe(pts: List<LogPoint>): List<LogPoint> {
         val seen = HashSet<Triple<Long, Double, Double>>()
         return pts.sortedBy { it.utc }.filter { seen.add(Triple(it.utc, it.lat, it.lon)) }
@@ -128,7 +139,7 @@ class Library(private val dir: File) {
 }
 
 /**
- * What the user changed on top of the raw downloads: names, and deleted tracks and waypoints
+ * What the user changed on top of the raw downloads: names, waypoint icons, and deleted tracks and waypoints
  * (same file format as on macOS). Deletions are time ranges, so a deleted track stays hidden
  * after later downloads too.
  */
@@ -138,6 +149,8 @@ class LibraryEdits(private val file: File) {
     /** Deleted tracks as first..last UTC times. */
     var deletedTracks: List<LongRange> = emptyList(); private set
     var deletedWaypoints: Set<Long> = emptySet(); private set
+    /** Icons (an emoji from [WaypointIcons]) keyed by the UTC time of a waypoint. */
+    var icons: Map<Long, String> = emptyMap(); private set
 
     init {
         runCatching {
@@ -147,6 +160,7 @@ class LibraryEdits(private val file: File) {
                 deletedTracks = (0 until a.length()).map { a.getJSONArray(it).let { r -> r.getLong(0)..r.getLong(1) } }
             }
             o.optJSONArray("deletedWaypoints")?.let { a -> deletedWaypoints = (0 until a.length()).map(a::getLong).toSet() }
+            o.optJSONObject("icons")?.let { n -> icons = n.keys().asSequence().associate { it.toLong() to n.getString(it) } }
         }
     }
 
@@ -156,6 +170,12 @@ class LibraryEdits(private val file: File) {
     fun rename(utc: Long, name: String) {
         val n = name.trim()
         names = if (n.isEmpty()) names - utc else names + (utc to n)
+        save()
+    }
+
+    @Synchronized
+    fun setIcon(utc: Long, icon: String?) {
+        icons = if (icon == null) icons - utc else icons + (utc to icon)
         save()
     }
 
@@ -178,6 +198,7 @@ class LibraryEdits(private val file: File) {
             .put("names", JSONObject().apply { for ((k, v) in names) put(k.toString(), v) })
             .put("deletedTracks", JSONArray().apply { for (r in deletedTracks) put(JSONArray().put(r.first).put(r.last)) })
             .put("deletedWaypoints", JSONArray().apply { for (w in deletedWaypoints.sorted()) put(w) })
+            .put("icons", JSONObject().apply { for ((k, v) in icons) put(k.toString(), v) })
         val tmp = File(file.path + ".tmp")
         tmp.writeText(o.toString(1))
         tmp.renameTo(file)

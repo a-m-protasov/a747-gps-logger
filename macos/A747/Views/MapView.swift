@@ -6,6 +6,8 @@ import WebKit
 struct MapView: NSViewRepresentable {
     var tracks: [[LogPoint]]
     var waypoints: [Waypoint] = []
+    /// When set, the map shows a cross at its centre and the picker reads that place.
+    var picker: MapPicker?
     // observed so the map redraws when the setting changes
     @AppStorage("trackColorBySpeed") private var bySpeed = true
     @AppStorage("trackColor") private var trackColor = "#1F8A70"
@@ -13,6 +15,8 @@ struct MapView: NSViewRepresentable {
     final class Coordinator: NSObject, WKNavigationDelegate {
         var loaded = false
         var pendingJS: String?
+        /// The data last sent: setData fits the view to it, so sending it again would undo the user's pan and zoom.
+        var sentJS: String?
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             loaded = true
@@ -37,6 +41,7 @@ struct MapView: NSViewRepresentable {
         let web = WKWebView(frame: .zero, configuration: WKWebViewConfiguration())
         web.navigationDelegate = context.coordinator
         web.setValue(false, forKey: "drawsBackground")
+        picker?.web = web
         if let url = Bundle.main.url(forResource: "map", withExtension: "html") {
             web.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
         }
@@ -52,7 +57,11 @@ struct MapView: NSViewRepresentable {
             if idx.last != t.count - 1 { idx.append(t.count - 1) }
             return ["c": idx.map { [t[$0].lon, t[$0].lat] }, "s": idx.map { (speeds[$0] * 10).rounded() / 10 }]
         }
-        let wpts = waypoints.map { ["lon": $0.point.lon, "lat": $0.point.lat, "name": $0.title] as [String: Any] }
+        let wpts = waypoints.map { w -> [String: Any] in
+            var o: [String: Any] = ["lon": w.point.lon, "lat": w.point.lat, "name": w.title]
+            if let i = w.icon { o["icon"] = i }
+            return o
+        }
         let metric = UI.units.isMetric
         let mf = MeasurementFormatter()
         mf.unitStyle = .short
@@ -62,8 +71,11 @@ struct MapView: NSViewRepresentable {
                                     "unit": unit, "factor": metric ? 1 : 1 / 1.609344]
         guard let json = try? JSONSerialization.data(withJSONObject: ["tracks": lines, "waypoints": wpts, "style": style]),
               let s = String(data: json, encoding: .utf8) else { return }
-        let js = "window.setData(\(s))"
-        if context.coordinator.loaded { web.evaluateJavaScript(js) } else { context.coordinator.pendingJS = js }
+        let js = "window.setData(\(s)); window.setPicking(\(picker != nil))"
+        let c = context.coordinator
+        guard js != c.sentJS else { return }
+        c.sentJS = js
+        if c.loaded { web.evaluateJavaScript(js) } else { c.pendingJS = js }
     }
 
     /// Speed at each point in km/h: the logged value, or derived from the previous point.
@@ -73,5 +85,16 @@ struct MapView: NSViewRepresentable {
             guard i > 0, t[i].utc > t[i - 1].utc else { return 0 }
             return Tracks.haversine(t[i - 1], t[i]) / Double(t[i].utc - t[i - 1].utc) * 3.6
         }
+    }
+}
+
+/// Reads the centre of a map that shows the picking cross.
+@MainActor
+final class MapPicker {
+    weak var web: WKWebView?
+
+    func center() async -> (lat: Double, lon: Double)? {
+        guard let web, let r = try? await web.evaluateJavaScript("window.center()") as? [Double], r.count == 2 else { return nil }
+        return (r[0], r[1])
     }
 }

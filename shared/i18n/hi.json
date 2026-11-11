@@ -126,5 +126,20 @@
  "Location access is needed to record a track.": "ट्रैक रिकॉर्ड करने के लिए स्थान की अनुमति चाहिए।",
  "Recording on this phone": "इस फ़ोन पर रिकॉर्डिंग",
  "A point every %lld s": "हर %lld से. में एक बिंदु",
- "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker और दूसरे ऐप रिकॉर्डिंग शुरू और बंद कर सकते हैं: Send Intent, लक्ष्य Activity, और इनमें से कोई एक एक्शन:"
+ "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker और दूसरे ऐप रिकॉर्डिंग शुरू और बंद कर सकते हैं: Send Intent, लक्ष्य Activity, और इनमें से कोई एक एक्शन:",
+ "Add waypoint": "वेपॉइंट जोड़ें",
+ "Edit waypoint": "वेपॉइंट बदलें",
+ "Move the map so that the cross is on the place.": "नक्शे को खिसकाएँ ताकि क्रॉस सही जगह पर आ जाए।",
+ "Name": "नाम",
+ "Icon": "आइकन",
+ "No icon": "कोई आइकन नहीं",
+ "Add": "जोड़ें",
+ "Next": "आगे",
+ "My location": "मेरा स्थान",
+ "Appearance": "रूप",
+ "Light": "हल्का",
+ "Dark": "गहरा",
+ "Language": "भाषा",
+ "The new language is used after a restart.": "नई भाषा दोबारा शुरू करने के बाद लागू होगी।",
+ "Restart now": "अभी दोबारा शुरू करें"
 }

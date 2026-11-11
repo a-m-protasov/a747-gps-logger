@@ -73,7 +73,9 @@ These apps fix all of that and give you the tracks in common formats.
   distance, durations, speeds, ascent/descent and speed/elevation charts. The track is coloured
   by speed (slowest red, fastest green) or in one colour of your choice.
 - **Waypoints**: places marked with the button, listed together with the tracks; opening one
-  zooms the map to it.
+  zooms the map to it. Add your own: move the map under a cross (on Android also to where the
+  phone is), give it a name and one of 30 icons. Any waypoint can get an icon, shown in the
+  list and on the maps.
 - **Rename and delete** tracks and waypoints. The raw downloads are kept as they are, and a
   deleted item does not come back with the next download.
 - **Export**: GPX 1.1, KML, CSV, or the raw BIN image — one track, a selection, or everything,
@@ -86,6 +88,8 @@ These apps fix all of that and give you the tracks in common formats.
 - **Record on the phone** (Android): a track from the phone's own GPS, one point every
   1–60 s, running with the screen off. Start and stop it in the app, from the notification, or
   from [Tasker](#recording-from-tasker) and similar apps.
+- **Appearance and language**: light, dark or as in the system; the app's language can differ
+  from the system's.
 - **Library**: everything downloaded stays on your device; re-downloading never duplicates.
 - **19 languages**: English, Russian, Serbian, Ukrainian, Kazakh, Georgian, Spanish,
   Portuguese (Brazil), French, German, Italian, Polish, Turkish, Chinese (Simplified),
@@ -94,8 +98,13 @@ These apps fix all of that and give you the tracks in common formats.
 Settings on the logger (log format, intervals) are shown but not changed in this version.
 
 <p align="center">
-<img src="docs/images/mac-device.png" width="420" alt="Device screen on macOS">
+<img src="docs/images/mac-add-waypoint.png" width="420" alt="Adding a waypoint on macOS">
+<img src="docs/images/android-map.png" width="190" alt="Tracks and waypoints with icons on the Android map">
 <img src="docs/images/android-list.png" width="190" alt="Tracks and waypoints on Android">
+</p>
+
+<p align="center">
+<img src="docs/images/mac-device.png" width="420" alt="Device screen on macOS">
 </p>
 
 ## Install

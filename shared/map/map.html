@@ -10,32 +10,58 @@
   html, body { margin: 0; height: 100%; background: #e9e7e2; }
   /* absolute, not height:100%: Android WebView may lay the page out at 0 px height first */
   #map { position: absolute; top: 0; right: 0; bottom: 0; left: 0; }
-  @media (prefers-color-scheme: dark) { html, body { background: #1c1c1e; } }
+  html.dark, html.dark body { background: #1c1c1e; }
   .wpt { width: 14px; height: 14px; border-radius: 50%; background: #F2994A;
          border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.4); }
+  /* a waypoint with an icon (an emoji) chosen by the user */
+  .wpt.icon { width: 26px; height: 26px; background: #fff; border: 2px solid #F2994A;
+              display: flex; align-items: center; justify-content: center; font-size: 15px; line-height: 1;
+              font-family: 'Apple Color Emoji', 'Noto Color Emoji', sans-serif; }
+  html.dark .wpt.icon { background: #2c2c2e; }
+  /* the place a new waypoint goes when picking */
+  #cross { position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; margin: -22px 0 0 -22px;
+           display: none; pointer-events: none; }
+  #cross::before, #cross::after { content: ''; position: absolute; background: #F2994A;
+           box-shadow: 0 0 0 1.5px #fff; border-radius: 1px; }
+  #cross::before { left: 21px; top: 0; width: 2px; height: 44px; }
+  #cross::after { top: 21px; left: 0; height: 2px; width: 44px; }
   .maplibregl-ctrl-attrib { font: 11px -apple-system, Roboto, sans-serif; }
   #legend { position: absolute; right: 10px; bottom: 34px; display: none; align-items: center; gap: 6px;
             padding: 4px 8px; border-radius: 8px; background: rgba(255,255,255,.85);
             font: 11px -apple-system, Roboto, sans-serif; color: #333; }
   #legend .bar { width: 70px; height: 6px; border-radius: 3px;
                  background: linear-gradient(90deg, hsl(0,85%,47%), hsl(60,85%,47%), hsl(120,85%,37%)); }
-  @media (prefers-color-scheme: dark) { #legend { background: rgba(30,30,32,.85); color: #ddd; } }
+  html.dark #legend { background: rgba(30,30,32,.85); color: #ddd; }
+  html.dark .maplibregl-ctrl-attrib { background: rgba(30,30,32,.8); color: #ccc; }
+  html.dark .maplibregl-ctrl-attrib a { color: #ddd; }
+  html.dark .maplibregl-ctrl-attrib-button { filter: invert(1); }
+  html.dark .maplibregl-ctrl-group { background: #2c2c2e; }
+  html.dark .maplibregl-ctrl-group button + button { border-top-color: #444; }
+  html.dark .maplibregl-ctrl-group button .maplibregl-ctrl-icon { filter: invert(1); }
+  html.dark .maplibregl-ctrl-scale { background: rgba(30,30,32,.75); color: #ddd; border-color: #ddd; }
 </style>
 </head>
 <body>
 <div id="map"></div>
+<div id="cross"></div>
 <div id="legend"><span id="lmin"></span><span class="bar"></span><span id="lmax"></span></div>
 <script>
-const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+// Theme: map.html?theme=dark|light, or the system's (and window.setTheme later)
+let theme = new URLSearchParams(location.search).get('theme');
+const system = matchMedia('(prefers-color-scheme: dark)');
+const isDark = () => theme ? theme === 'dark' : system.matches;
+const styleURL = d => 'https://tiles.openfreemap.org/styles/' + (d ? 'dark' : 'liberty');
+let dark = isDark();
+document.documentElement.classList.toggle('dark', dark);
 const map = new maplibregl.Map({
   container: 'map',
-  style: 'https://tiles.openfreemap.org/styles/' + (dark ? 'dark' : 'liberty'),
+  style: styleURL(dark),
   center: [0, 20], zoom: 1, attributionControl: { compact: true },
 });
 map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
 map.addControl(new maplibregl.ScaleControl(), 'bottom-left');
 
-let pending = null, markers = [], ranges = [];
+let last = null, ready = false, markers = [], ranges = [];
 const ACCENT = '#1F8A70';
 
 /** Red (slowest) to green (fastest) for t in 0..1. */
@@ -70,7 +96,7 @@ function trackFeatures(t, style) {
   }));
 }
 
-function apply(d) {
+function apply(d, fit = true) {
   for (const m of markers) m.remove();
   markers = [];
   const style = d.style || { mode: 'solid', color: ACCENT };
@@ -95,27 +121,49 @@ function apply(d) {
     legend.style.display = 'flex';
   } else legend.style.display = 'none';
   for (const w of d.waypoints || []) {
-    const el = document.createElement('div'); el.className = 'wpt';
+    const el = document.createElement('div');
+    el.className = w.icon ? 'wpt icon' : 'wpt';
+    if (w.icon) el.textContent = w.icon;
     markers.push(new maplibregl.Marker({ element: el })
       .setLngLat([w.lon, w.lat]).setPopup(new maplibregl.Popup({ offset: 10 }).setText(w.name))
       .addTo(map));
   }
   const pts = features.flatMap(f => f.geometry.coordinates)
     .concat((d.waypoints || []).map(w => [w.lon, w.lat]));
-  if (pts.length) {
+  if (fit && pts.length) {
     const b = pts.reduce((b, p) => b.extend(p), new maplibregl.LngLatBounds(pts[0], pts[0]));
     // a single waypoint: close enough to see the street, far enough to see where it is
-    map.fitBounds(b, { padding: 40, maxZoom: pts.length === 1 ? 15 : 16, duration: 0 });
+    map.fitBounds(b, { padding: { top: 40, left: 40, right: 40, bottom: 40 + (d.bottomInset || 0) }, maxZoom: pts.length === 1 ? 15 : 16, duration: 0 });
   }
 }
 
 // Called by the app:
 // setData({tracks: [{c: [[lon, lat], ...], s: [kmh, ...]}, ...] (or plain coordinate arrays),
-//          waypoints: [{lon, lat, name}],
+//          waypoints: [{lon, lat, name, icon}] (icon: an emoji or absent),
+//          bottomInset: px kept free at the bottom when fitting (buttons over the map),
 //          style: {mode: 'speed' | 'solid', color: '#RRGGBB', unit: 'km/h', factor: 1}})
 // The legend (one track, by speed) shows the slowest and fastest piece in `unit` (km/h × factor).
-window.setData = d => { if (map.isStyleLoaded()) apply(d); else pending = d; };
-map.on('load', () => { if (pending) { apply(pending); pending = null; } });
+window.setData = d => { last = d; if (ready) apply(d); };
+// also after a theme change, which replaces the style and with it the track layers
+let refit = true;
+map.on('style.load', () => { ready = true; if (last) apply(last, refit); refit = false; });
+function restyle() {
+  const d = isDark();
+  document.documentElement.classList.toggle('dark', d);
+  if (d === dark) return;
+  dark = d;
+  ready = false;
+  map.setStyle(styleURL(d), { diff: false });
+}
+system.addEventListener('change', restyle);
+// setTheme('dark' | 'light' | null for the system's)
+window.setTheme = t => { theme = t || null; restyle(); };
+// Picking a place for a new waypoint: a cross marks the centre of the map.
+window.setPicking = on => { document.getElementById('cross').style.display = on ? 'block' : 'none'; };
+// moves the map to a place, close enough to see the street
+window.goTo = (lat, lon) => map.jumpTo({ center: [lon, lat], zoom: Math.max(map.getZoom(), 16) });
+// [lat, lon] of the centre
+window.center = () => { const c = map.getCenter().wrap(); return [c.lat, c.lng]; };
 map.on('error', e => console.log('map error: ' + (e && e.error ? e.error.message : e)));
 addEventListener('resize', () => map.resize());
 </script>

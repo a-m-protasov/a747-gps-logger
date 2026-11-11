@@ -3,12 +3,14 @@ import SwiftUI
 @main
 struct A747App: App {
     @State private var model = AppModel.shared
+    @AppStorage("theme") private var theme = AppTheme.system.rawValue
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environment(model)
                 .frame(minWidth: 900, minHeight: 600)
+                .onChange(of: theme, initial: true) { AppTheme(rawValue: theme)?.apply() }
         }
         .windowToolbarStyle(.unified)
         .commands {
@@ -53,9 +55,31 @@ struct SettingsView: View {
     @AppStorage("showWaypointsOnTrack") private var showWaypoints = false
     @AppStorage("trackColorBySpeed") private var bySpeed = true
     @AppStorage("trackColor") private var trackColor = "#1F8A70"
+    @AppStorage("theme") private var theme = AppTheme.system.rawValue
+    /// "" follows the system; otherwise one of the app's localizations.
+    @AppStorage("language") private var language = ""
+    @State private var languageChanged = false
 
     var body: some View {
         Form {
+            Picker("Appearance", selection: $theme) {
+                Text("As in system settings").tag(AppTheme.system.rawValue)
+                Text("Light").tag(AppTheme.light.rawValue)
+                Text("Dark").tag(AppTheme.dark.rawValue)
+            }
+            Picker("Language", selection: $language) {
+                Text("As in system settings").tag("")
+                ForEach(AppLanguage.all, id: \.self) { Text(AppLanguage.name($0)).tag($0) }
+            }
+            .onChange(of: language) {
+                AppLanguage.set(language)
+                languageChanged = true
+            }
+            if languageChanged {
+                LabeledContent("The new language is used after a restart.") {
+                    Button("Restart now") { AppLanguage.restart() }
+                }
+            }
             Toggle("Color by speed", isOn: $bySpeed)
             ColorPicker("Track color", selection: Binding(
                 get: { Color(hex: trackColor) },
@@ -88,5 +112,43 @@ extension Color {
     var hex: String {
         guard let c = NSColor(self).usingColorSpace(.sRGB) else { return "#1F8A70" }
         return String(format: "#%02X%02X%02X", Int(c.redComponent * 255), Int(c.greenComponent * 255), Int(c.blueComponent * 255))
+    }
+}
+
+enum AppTheme: String {
+    case system, light, dark
+
+    func apply() {
+        NSApp.appearance = switch self {
+        case .system: nil
+        case .light: NSAppearance(named: .aqua)
+        case .dark: NSAppearance(named: .darkAqua)
+        }
+    }
+}
+
+/// The app's language, chosen in Settings (macOS reads it at launch from AppleLanguages).
+enum AppLanguage {
+    static var all: [String] {
+        Bundle.main.localizations.filter { $0 != "Base" }.sorted { name($0).localizedCompare(name($1)) == .orderedAscending }
+    }
+
+    /// The language's own name for itself.
+    static func name(_ code: String) -> String {
+        let l = Locale(identifier: code)
+        return l.localizedString(forIdentifier: code)?.capitalized(with: l) ?? code
+    }
+
+    static func set(_ code: String) {
+        if code.isEmpty { UserDefaults.standard.removeObject(forKey: "AppleLanguages") }
+        else { UserDefaults.standard.set([code], forKey: "AppleLanguages") }
+    }
+
+    static func restart() {
+        let cfg = NSWorkspace.OpenConfiguration()
+        cfg.createsNewApplicationInstance = true
+        NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: cfg) { _, _ in
+            DispatchQueue.main.async { NSApp.terminate(nil) }
+        }
     }
 }

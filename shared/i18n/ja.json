@@ -126,5 +126,20 @@
  "Location access is needed to record a track.": "トラックの記録には位置情報へのアクセスが必要です。",
  "Recording on this phone": "このスマートフォンで記録",
  "A point every %lld s": "%lld 秒ごとに 1 ポイント",
- "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker などのアプリから記録を開始・停止できます：Send Intent、ターゲットは Activity、アクションは次のいずれか："
+ "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker などのアプリから記録を開始・停止できます：Send Intent、ターゲットは Activity、アクションは次のいずれか：",
+ "Add waypoint": "ウェイポイントを追加",
+ "Edit waypoint": "ウェイポイントを編集",
+ "Move the map so that the cross is on the place.": "十字が目的の場所に来るように地図を動かしてください。",
+ "Name": "名前",
+ "Icon": "アイコン",
+ "No icon": "アイコンなし",
+ "Add": "追加",
+ "Next": "次へ",
+ "My location": "現在地",
+ "Appearance": "外観",
+ "Light": "ライト",
+ "Dark": "ダーク",
+ "Language": "言語",
+ "The new language is used after a restart.": "新しい言語は再起動後に適用されます。",
+ "Restart now": "今すぐ再起動"
 }

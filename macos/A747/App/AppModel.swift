@@ -32,8 +32,18 @@ struct Waypoint: Identifiable, Hashable {
     let customName: String?
     let day: String
     let timeZone: TimeZone
+    /// An emoji from ``WaypointIcons``, or nil for the plain marker.
+    var icon: String?
     var id: String { "\(point.utc)-\(point.lat)-\(point.lon)" }
     var title: String { customName ?? name }
+}
+
+/// Icons a waypoint can have (the same list as on Android). Emoji look the same on the map
+/// page and in the lists, and need no artwork.
+enum WaypointIcons {
+    static let all = ["⭐", "❤️", "🚩", "⚠️", "🏠", "🏢", "🏨", "⛺", "🍴", "☕", "🍺", "🛒",
+                      "⛽", "🅿️", "🚗", "🚲", "🚶", "🚌", "⚓", "✈️", "📷", "🏔️", "🌲", "🏖️",
+                      "💧", "🏛️", "⛪", "🏥", "🎯", "💡"]
 }
 
 /// A row of the library list: tracks and waypoints together, newest first.
@@ -132,7 +142,8 @@ final class AppModel {
         tracks = (logger + imported).sorted { $0.stats.startUTC > $1.stats.startUTC }
         waypoints = wpts.map {
             let zone = tz.timeZone(lat: $0.lat, lon: $0.lon)
-            return Waypoint(point: $0, name: ex.name($0), customName: edits.names[$0.utc], day: day($0, zone), timeZone: zone)
+            return Waypoint(point: $0, name: ex.name($0), customName: edits.names[$0.utc], day: day($0, zone), timeZone: zone,
+                            icon: edits.icons[$0.utc])
         }.reversed()
         items = (tracks.map(LibraryItem.track) + waypoints.map(LibraryItem.waypoint)).sorted { $0.utc > $1.utc }
     }
@@ -147,6 +158,32 @@ final class AppModel {
         case .waypoint(let w): w.point.utc
         }
         edits.names[key] = n.isEmpty ? nil : n
+        edits.save(library.dir)
+        reload()
+    }
+
+    /// Adds a waypoint made by hand, timed now; returns its list id.
+    @discardableResult
+    func addWaypoint(lat: Double, lon: Double, name: String, icon: String?) -> String? {
+        var utc = Int64(Date().timeIntervalSince1970)
+        let taken = Set(waypoints.map(\.point.utc))
+        while taken.contains(utc) { utc += 1 }  // the time is the waypoint's key
+        let p = LogPoint(utc: utc, lat: lat, lon: lon)
+        do { try library.addWaypoint(p) } catch { message = error.localizedDescription; return nil }
+        edits.deletedWaypoints.remove(utc)
+        let n = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        edits.names[utc] = n.isEmpty ? nil : n
+        edits.icons[utc] = icon
+        edits.save(library.dir)
+        reload()
+        return waypoints.first { $0.point.utc == utc }.map { LibraryItem.waypoint($0).id }
+    }
+
+    /// Sets the name and icon of a waypoint.
+    func edit(_ w: Waypoint, name: String, icon: String?) {
+        let n = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        edits.names[w.point.utc] = n.isEmpty ? nil : n
+        edits.icons[w.point.utc] = icon
         edits.save(library.dir)
         reload()
     }

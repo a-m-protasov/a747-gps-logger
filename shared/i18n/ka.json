@@ -126,5 +126,20 @@
  "Location access is needed to record a track.": "ტრეკის ჩასაწერად საჭიროა მდებარეობაზე წვდომა.",
  "Recording on this phone": "ჩაწერა ამ ტელეფონზე",
  "A point every %lld s": "წერტილი ყოველ %lld წმ-ში",
- "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker-ს და სხვა აპებს შეუძლიათ ჩაწერის ჩართვა და გამორთვა: Send Intent, სამიზნე Activity, ერთ-ერთი ქმედება:"
+ "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker-ს და სხვა აპებს შეუძლიათ ჩაწერის ჩართვა და გამორთვა: Send Intent, სამიზნე Activity, ერთ-ერთი ქმედება:",
+ "Add waypoint": "წერტილის დამატება",
+ "Edit waypoint": "წერტილის რედაქტირება",
+ "Move the map so that the cross is on the place.": "გადაადგილეთ რუკა ისე, რომ ჯვარი სასურველ ადგილზე აღმოჩნდეს.",
+ "Name": "სახელი",
+ "Icon": "ხატულა",
+ "No icon": "ხატულის გარეშე",
+ "Add": "დამატება",
+ "Next": "შემდეგი",
+ "My location": "ჩემი მდებარეობა",
+ "Appearance": "იერსახე",
+ "Light": "ღია",
+ "Dark": "მუქი",
+ "Language": "ენა",
+ "The new language is used after a restart.": "ახალი ენა გადატვირთვის შემდეგ ჩაირთვება.",
+ "Restart now": "გადატვირთვა"
 }

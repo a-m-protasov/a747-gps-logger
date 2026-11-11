@@ -1,6 +1,20 @@
 package io.github.a_m_protasov.a747.ui
 
 import android.bluetooth.BluetoothDevice
+import android.annotation.SuppressLint
+import android.location.LocationManager
+import android.os.Build
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.material.icons.filled.AddLocationAlt
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material3.SmallFloatingActionButton
+import androidx.compose.material3.Surface
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.sp
+import io.github.a_m_protasov.a747.AppLocale
+import io.github.a_m_protasov.a747.WaypointIcons
 import android.content.Intent
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
@@ -459,7 +473,12 @@ private fun ItemRow(i: Item, modifier: Modifier, trailing: (@Composable () -> Un
     ListItem(
         modifier = modifier,
         leadingContent = {
-            if (i is Track) Dot(sourceIcon(i.source), MaterialTheme.colorScheme.primary) else Dot(Icons.Filled.Place, WaypointColor)
+            when {
+                i is Track -> Dot(sourceIcon(i.source), MaterialTheme.colorScheme.primary)
+                i is Waypoint && i.icon != null -> Box(Modifier.size(40.dp).background(WaypointColor.copy(alpha = 0.15f), CircleShape),
+                    contentAlignment = Alignment.Center) { Text(i.icon, fontSize = 20.sp) }
+                else -> Dot(Icons.Filled.Place, WaypointColor)
+            }
         },
         headlineContent = { Text(title, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         supportingContent = { Text(sub, maxLines = 1, overflow = TextOverflow.Ellipsis) },
@@ -481,6 +500,45 @@ private fun RenameDialog(item: Item, onDone: () -> Unit) {
         confirmButton = { TextButton(onClick = { A747App.repo.rename(item, text); onDone() }) { Text(stringResource(R.string.save)) } },
         dismissButton = { TextButton(onClick = onDone) { Text(stringResource(R.string.cancel)) } },
     )
+}
+
+/** Name and icon of a new waypoint ([w] null) or of an existing one. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun WaypointDialog(w: Waypoint?, onDismiss: () -> Unit, onSave: (name: String, icon: String?) -> Unit) {
+    var text by remember { mutableStateOf(w?.customName ?: "") }
+    var icon by remember { mutableStateOf(w?.icon) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(if (w == null) R.string.add_waypoint else R.string.edit_waypoint)) },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(text, { text = it }, label = { Text(stringResource(R.string.name)) },
+                    placeholder = w?.let { { Text(it.name) } }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                Text(stringResource(R.string.icon), style = MaterialTheme.typography.titleSmall)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    IconCell(icon == null, { icon = null }) {
+                        Box(Modifier.size(16.dp).background(Color.White, CircleShape).padding(2.dp).background(WaypointColor, CircleShape))
+                    }
+                    for (e in WaypointIcons.all) IconCell(icon == e, { icon = e }) { Text(e, fontSize = 20.sp) }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = { onSave(text, icon) }) { Text(stringResource(if (w == null) R.string.add else R.string.save)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
+    )
+}
+
+@Composable
+private fun IconCell(on: Boolean, onClick: () -> Unit, content: @Composable () -> Unit) {
+    val shape = RoundedCornerShape(10.dp)
+    Box(
+        Modifier.size(42.dp).clip(shape)
+            .background(if (on) WaypointColor.copy(alpha = 0.25f) else MaterialTheme.colorScheme.surfaceContainerHigh)
+            .then(if (on) Modifier.border(2.dp, WaypointColor, shape) else Modifier)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) { content() }
 }
 
 @Composable
@@ -506,7 +564,11 @@ private fun EditActions(item: Item, onDeleted: () -> Unit) {
     var deleting by remember { mutableStateOf(false) }
     IconButton(onClick = { renaming = true }) { Icon(Icons.Filled.Edit, stringResource(R.string.rename)) }
     IconButton(onClick = { deleting = true }) { Icon(Icons.Filled.Delete, stringResource(R.string.delete)) }
-    if (renaming) RenameDialog(item) { renaming = false }
+    if (renaming) {
+        if (item is Waypoint) WaypointDialog(item, onDismiss = { renaming = false }) { name, icon ->
+            A747App.repo.edit(item, name, icon); renaming = false
+        } else RenameDialog(item) { renaming = false }
+    }
     if (deleting) DeleteDialog(item, onDone = { deleting = false }, onDeleted = onDeleted)
 }
 
@@ -539,16 +601,49 @@ private fun MapScreen(items: List<Item>) {
     val tracks = remember(items, shown) { items.filterIsInstance<Track>().filter { it.mapKey in shown }.map { it.points } }
     val wpts = remember(items, shown) { items.filterIsInstance<Waypoint>().filter { it.mapKey in shown } }
     var picking by rememberSaveable { mutableStateOf(false) }
+    // adding a waypoint: the user moves the map under a cross, then names it and picks an icon
+    var adding by rememberSaveable { mutableStateOf(false) }
+    var place by remember { mutableStateOf<Pair<Double, Double>?>(null) }
+    val controller = remember { MapController() }
     // the map takes the whole screen; what it shows is chosen in a sheet opened by the button
     Box(Modifier.fillMaxSize()) {
-        MapWeb(tracks, wpts, Modifier.fillMaxSize())
-        RecordButton(Modifier.align(Alignment.BottomStart).padding(12.dp))
-        ExtendedFloatingActionButton(
-            onClick = { picking = true },
-            icon = { Icon(Icons.Filled.Layers, null) },
-            text = { Text(stringResource(R.string.tracks) + if (shown.isEmpty()) "" else " · ${tracks.size + wpts.size}") },
-            modifier = Modifier.align(Alignment.BottomEnd).padding(12.dp),
-        )
+        MapWeb(tracks, wpts, Modifier.fillMaxSize(), picking = adding, controller = controller, bottomInset = 80)
+        if (!adding) {
+            RecordButton(Modifier.align(Alignment.BottomStart).padding(12.dp))
+            Column(Modifier.align(Alignment.BottomEnd).padding(12.dp), horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                SmallFloatingActionButton(onClick = { adding = true }) {
+                    Icon(Icons.Filled.AddLocationAlt, stringResource(R.string.add_waypoint))
+                }
+                ExtendedFloatingActionButton(
+                    onClick = { picking = true },
+                    icon = { Icon(Icons.Filled.Layers, null) },
+                    text = { Text(stringResource(R.string.tracks) + if (shown.isEmpty()) "" else " · ${tracks.size + wpts.size}") },
+                )
+            }
+        } else {
+            Surface(Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(12.dp), shape = RoundedCornerShape(20.dp),
+                tonalElevation = 3.dp, shadowElevation = 6.dp) {
+                Column(Modifier.padding(16.dp, 14.dp, 12.dp, 8.dp)) {
+                    Text(stringResource(R.string.add_waypoint), style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.move_the_map_so_that_the_cross_is_on_the_place),
+                        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        MyLocationButton(controller)
+                        Spacer(Modifier.weight(1f))
+                        TextButton(onClick = { adding = false }) { Text(stringResource(R.string.cancel)) }
+                        Button(onClick = { controller.center { lat, lon -> place = lat to lon } }) { Text(stringResource(R.string.next)) }
+                    }
+                }
+            }
+        }
+    }
+    place?.let { (lat, lon) ->
+        WaypointDialog(null, onDismiss = { place = null }) { name, icon ->
+            repo.addWaypoint(lat, lon, name, icon) { w -> w?.let { show(shown + it.mapKey) } }
+            place = null
+            adding = false
+        }
     }
     if (picking) ModalBottomSheet(onDismissRequest = { picking = false }) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -574,6 +669,31 @@ private fun MapScreen(items: List<Item>) {
                 }
             }
         }
+    }
+}
+
+/** Moves the map to where this phone is (asking for location access first). */
+@Composable
+private fun MyLocationButton(controller: MapController) {
+    val ctx = LocalContext.current
+    @SuppressLint("MissingPermission")
+    fun locate() {
+        val lm = ctx.getSystemService(LocationManager::class.java)
+        val last = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER, LocationManager.PASSIVE_PROVIDER)
+            .mapNotNull { runCatching { lm.getLastKnownLocation(it) }.getOrNull() }.maxByOrNull { it.time }
+        last?.let { controller.goTo(it.latitude, it.longitude) }
+        if (Build.VERSION.SDK_INT >= 30) {
+            val provider = if (lm.isProviderEnabled(LocationManager.GPS_PROVIDER)) LocationManager.GPS_PROVIDER else LocationManager.NETWORK_PROVIDER
+            runCatching { lm.getCurrentLocation(provider, null, ctx.mainExecutor) { l -> l?.let { controller.goTo(it.latitude, it.longitude) } } }
+        }
+    }
+    val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        if (RecordService.hasPermission(ctx)) locate()
+    }
+    TextButton(onClick = { if (RecordService.hasPermission(ctx)) locate() else ask.launch(RecordService.permissions) }) {
+        Icon(Icons.Filled.MyLocation, null, Modifier.size(18.dp))
+        Spacer(Modifier.width(6.dp))
+        Text(stringResource(R.string.my_location))
     }
 }
 
@@ -821,6 +941,9 @@ private fun SettingsScreen(onBack: () -> Unit) {
     var color by remember { mutableStateOf(repo.trackColor) }
     var interval by remember { mutableIntStateOf(repo.recordIntervalS) }
     val ctx = LocalContext.current
+    val theme by repo.theme.collectAsStateWithLifecycle()
+    var language by remember { mutableStateOf(AppLocale.current(ctx)) }
+    var choosingLanguage by rememberSaveable { mutableStateOf(false) }
     Scaffold(topBar = {
         TopAppBar(title = { Text(stringResource(R.string.settings)) },
             navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } })
@@ -832,6 +955,30 @@ private fun SettingsScreen(onBack: () -> Unit) {
                 ListItem(headlineContent = { Text(stringResource(title)) },
                     leadingContent = { RadioButton(selected = units == key, onClick = null) },
                     modifier = Modifier.clickable { units = key; repo.units = key })
+            }
+            HorizontalDivider()
+            Text(stringResource(R.string.appearance), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(16.dp, 16.dp, 16.dp, 4.dp))
+            for ((key, title) in listOf("system" to R.string.as_in_system_settings, "light" to R.string.light, "dark" to R.string.dark)) {
+                ListItem(headlineContent = { Text(stringResource(title)) },
+                    leadingContent = { RadioButton(selected = theme == key, onClick = null) },
+                    modifier = Modifier.clickable { repo.setTheme(key) })
+            }
+            HorizontalDivider()
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.language)) },
+                supportingContent = { Text(if (language.isEmpty()) stringResource(R.string.as_in_system_settings) else AppLocale.name(language)) },
+                leadingContent = { Icon(Icons.Filled.Language, null) },
+                modifier = Modifier.clickable { choosingLanguage = true },
+            )
+            if (choosingLanguage) LanguageDialog(language) { tag ->
+                choosingLanguage = false
+                if (tag != null && tag != language) {
+                    AppLocale.set(ctx, tag)
+                    language = tag
+                    // Android 13+ recreates the screen itself
+                    if (Build.VERSION.SDK_INT < 33) (ctx as? android.app.Activity)?.recreate()
+                }
             }
             HorizontalDivider()
             ListItem(
@@ -894,4 +1041,26 @@ private fun SettingsScreen(onBack: () -> Unit) {
                 modifier = Modifier.clickable { openUrl(ctx, "https://github.com/a-m-protasov/a747-gps-logger") })
         }
     }
+}
+
+/** The app's languages, each in its own name; null when dismissed. */
+@Composable
+private fun LanguageDialog(current: String, onDone: (String?) -> Unit) {
+    AlertDialog(
+        onDismissRequest = { onDone(null) },
+        title = { Text(stringResource(R.string.language)) },
+        text = {
+            LazyColumn {
+                items(listOf("") + AppLocale.tags.sortedBy { AppLocale.name(it) }) { tag ->
+                    ListItem(
+                        headlineContent = { Text(if (tag.isEmpty()) stringResource(R.string.as_in_system_settings) else AppLocale.name(tag)) },
+                        leadingContent = { RadioButton(selected = tag == current, onClick = null) },
+                        modifier = Modifier.clickable { onDone(tag) },
+                        colors = androidx.compose.material3.ListItemDefaults.colors(containerColor = Color.Transparent),
+                    )
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = { onDone(null) }) { Text(stringResource(R.string.cancel)) } },
+    )
 }

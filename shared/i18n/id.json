@@ -126,5 +126,20 @@
  "Location access is needed to record a track.": "Akses lokasi diperlukan untuk merekam trek.",
  "Recording on this phone": "Perekaman di ponsel ini",
  "A point every %lld s": "Satu titik setiap %lld dtk",
- "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker dan aplikasi lain dapat memulai dan menghentikan perekaman dengan Send Intent, target Activity, dan salah satu aksi berikut:"
+ "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker dan aplikasi lain dapat memulai dan menghentikan perekaman dengan Send Intent, target Activity, dan salah satu aksi berikut:",
+ "Add waypoint": "Tambah titik",
+ "Edit waypoint": "Ubah titik",
+ "Move the map so that the cross is on the place.": "Geser peta hingga tanda silang berada di tempat yang diinginkan.",
+ "Name": "Nama",
+ "Icon": "Ikon",
+ "No icon": "Tanpa ikon",
+ "Add": "Tambah",
+ "Next": "Berikutnya",
+ "My location": "Lokasi saya",
+ "Appearance": "Tampilan",
+ "Light": "Terang",
+ "Dark": "Gelap",
+ "Language": "Bahasa",
+ "The new language is used after a restart.": "Bahasa baru dipakai setelah dimulai ulang.",
+ "Restart now": "Mulai ulang sekarang"
 }

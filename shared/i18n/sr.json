@@ -126,5 +126,20 @@
  "Location access is needed to record a track.": "За снимање трасе потребан је приступ локацији.",
  "Recording on this phone": "Снимање на овом телефону",
  "A point every %lld s": "Тачка сваких %lld s",
- "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker и друге апликације могу да покрену и зауставе снимање: Send Intent, циљ Activity, једна од ових радњи:"
+ "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker и друге апликације могу да покрену и зауставе снимање: Send Intent, циљ Activity, једна од ових радњи:",
+ "Add waypoint": "Додај тачку",
+ "Edit waypoint": "Измени тачку",
+ "Move the map so that the cross is on the place.": "Померите мапу тако да крстић буде на жељеном месту.",
+ "Name": "Назив",
+ "Icon": "Иконица",
+ "No icon": "Без иконице",
+ "Add": "Додај",
+ "Next": "Даље",
+ "My location": "Моја локација",
+ "Appearance": "Изглед",
+ "Light": "Светла",
+ "Dark": "Тамна",
+ "Language": "Језик",
+ "The new language is used after a restart.": "Нови језик ће се применити после поновног покретања.",
+ "Restart now": "Поново покрени"
 }

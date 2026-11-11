@@ -40,6 +40,9 @@ SKIP = {
     "All tracks on the logger will be erased after they are saved on this Mac.",
     "Show in Finder",
     "Can't open the logger's USB interface (IOKit error %@).",
+    "No icon",
+    "The new language is used after a restart.",
+    "Restart now",
 }
 
 ANDROID_LOCALE = {"zh-Hans": "zh-rCN", "pt-BR": "pt-rBR", "id": "in"}

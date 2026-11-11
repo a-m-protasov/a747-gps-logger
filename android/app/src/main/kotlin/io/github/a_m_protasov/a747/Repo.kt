@@ -59,10 +59,22 @@ data class Track(val points: List<LogPoint>, val stats: TrackStats, override val
 }
 
 data class Waypoint(val point: LogPoint, override val name: String, override val customName: String?,
-                    override val day: LocalDate, override val zone: ZoneId) : Item {
+                    override val day: LocalDate, override val zone: ZoneId,
+                    /** An emoji from [WaypointIcons], or null for the plain marker. */
+                    val icon: String? = null) : Item {
     val id get() = "${point.utc}-${point.lat}-${point.lon}"
     override val key get() = "w:$id"
     override val utc get() = point.utc
+}
+
+/**
+ * Icons a waypoint can have (the same list as on macOS). Emoji look the same on the map page and
+ * in the lists, and need no artwork.
+ */
+object WaypointIcons {
+    val all = listOf("⭐", "❤️", "🚩", "⚠️", "🏠", "🏢", "🏨", "⛺", "🍴", "☕", "🍺", "🛒",
+        "⛽", "🅿️", "🚗", "🚲", "🚶", "🚌", "⚓", "✈️", "📷", "🏔️", "🌲", "🏖️",
+        "💧", "🏛️", "⛪", "🏥", "🎯", "💡")
 }
 
 enum class Link { USB, BLUETOOTH }
@@ -119,6 +131,10 @@ class Repo(private val ctx: Context) {
                          val last: LogPoint? = null)
     val recording = MutableStateFlow<Recording?>(null)
 
+    /** "system", "light" or "dark". */
+    val theme = MutableStateFlow(prefs.getString("theme", "system")!!)
+    fun setTheme(v: String) { prefs.edit().putString("theme", v).apply(); theme.value = v }
+
     var showWaypointsOnTrack: Boolean
         get() = prefs.getBoolean("showWaypointsOnTrack", false)
         set(v) { prefs.edit().putBoolean("showWaypointsOnTrack", v).apply() }
@@ -151,7 +167,7 @@ class Repo(private val ctx: Context) {
         val t = (logger + imported).sortedByDescending { it.utc }
         val w = wpts.map {
             val zone = tz.zone(it.lat, it.lon)
-            Waypoint(it, ex.name(it), edits.names[it.utc], day(it, zone), zone)
+            Waypoint(it, ex.name(it), edits.names[it.utc], day(it, zone), zone, edits.icons[it.utc])
         }.reversed()
         tracks.value = t
         waypoints.value = w
@@ -222,6 +238,30 @@ class Repo(private val ctx: Context) {
     /** Sets (or, with an empty string, clears) the name of a track or waypoint. */
     fun rename(item: Item, name: String) {
         edits.rename(if (item is Track) item.points[0].utc else (item as Waypoint).point.utc, name)
+        reload()
+    }
+
+    /** Adds a waypoint made by hand, timed now; returns it once the list is rebuilt. */
+    fun addWaypoint(lat: Double, lon: Double, name: String, icon: String?, done: (Waypoint?) -> Unit = {}) {
+        scope.launch(Dispatchers.IO) {
+            build()
+            var utc = System.currentTimeMillis() / 1000
+            val taken = waypoints.value.map { it.point.utc }.toSet()
+            while (utc in taken) utc++  // the time is the waypoint's key
+            library.addWaypoint(LogPoint(utc, lat, lon))
+            edits.undelete(listOf(utc))
+            edits.rename(utc, name)
+            edits.setIcon(utc, icon)
+            build()
+            val w = waypoints.value.firstOrNull { it.point.utc == utc }
+            withContext(Dispatchers.Main) { done(w) }
+        }
+    }
+
+    /** Sets the name and icon of a waypoint. */
+    fun edit(w: Waypoint, name: String, icon: String?) {
+        edits.rename(w.point.utc, name)
+        edits.setIcon(w.point.utc, icon)
         reload()
     }
 

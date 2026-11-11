@@ -25,7 +25,7 @@ Two native apps, logic written twice. To keep them identical:
   enter the repository.
 
 Shared design language (palette, icon, typography, screen structure); native controls on
-each platform. Android tabs: **Device · Tracks · Settings** (tracks and waypoints share one list). macOS:
+each platform. Android tabs: **Device · Tracks · Map**, Settings behind the gear (tracks and waypoints share one list). macOS:
 one window, the list on the left with Device and Settings buttons under it; with nothing
 selected the right side shows the device.
 
@@ -87,6 +87,12 @@ selected the right side shows the device.
   (`import-<utc>-<id>.csv`, `PointsFile` format) and is never split; deleting it deletes the
   file. A track with the same start and end as one in the library, or a waypoint at the same
   second, is skipped. Names in the file become user names unless they equal the default name.
+- **Own waypoints** (Mac and Android): placed by moving the map under a cross (`setPicking`
+  and `center()` in map.html; Android can jump to the phone's location), timed at the moment
+  they are added and stored in `tracks/added-waypoints.csv`. Name and icon are edits keyed by
+  the waypoint's UTC time (`icons` in edits.json), so any waypoint, also one from the logger,
+  can have an icon. Icons are 30 emoji, the same list on both platforms (`WaypointIcons`);
+  the map draws them in a ringed marker.
 - **Map screen** (Android): a full-screen map; the Tracks button opens a sheet
   where tracks and waypoints are ticked to be shown together; the choice is remembered.
 - **Recording on the phone** (Android): a foreground location service writes GPS fixes
@@ -108,6 +114,10 @@ selected the right side shows the device.
 ### Settings
 - Track split gap, units (from system region, overridable), map layer for waypoints,
   phone recording interval (Android).
+- Appearance: as in the system, light or dark; the map page follows it (`setTheme`).
+- Language: as in the system or one of the app's languages. Android 13+ keeps it per app
+  (`LocaleManager`, also in the system's app settings), older versions apply it to each
+  context; macOS writes `AppleLanguages` and offers to restart.
 - No analytics, no crash reporting. The only network traffic is map tiles.
 
 ## Localization
