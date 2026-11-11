@@ -109,5 +109,22 @@
  "Deleted tracks and waypoints won't come back after the next download.": "წაშლილი ტრეკები და წერტილები შემდეგი ჩამოტვირთვისას აღარ დაბრუნდება.",
  "Select a track or waypoint": "აირჩიეთ ტრეკი ან წერტილი",
  "Selected: %lld": "არჩეულია: %lld",
- "Coordinates": "კოორდინატები"
+ "Coordinates": "კოორდინატები",
+ "Import files…": "ფაილების იმპორტი…",
+ "Tracks added: %lld, waypoints added: %lld.": "დაემატა ტრეკები: %lld, წერტილები: %lld.",
+ "Already in the library: %lld.": "უკვე ბიბლიოთეკაშია: %lld.",
+ "Not a GPX, KML, CSV or NMEA file.": "ეს არ არის GPX, KML, CSV ან NMEA ფაილი.",
+ "The file has no points with a time.": "ფაილში დროიანი წერტილები არ არის.",
+ "Map": "რუკა",
+ "Show all": "ყველას ჩვენება",
+ "Hide all": "ყველას დამალვა",
+ "Choose tracks and waypoints below to show them on the map.": "რუკაზე საჩვენებლად ქვემოთ აირჩიეთ ტრეკები და წერტილები.",
+ "Record a track": "ტრეკის ჩაწერა",
+ "Recording a track": "მიმდინარეობს ტრეკის ჩაწერა",
+ "Stop recording": "ჩაწერის შეჩერება",
+ "Waiting for GPS…": "GPS-ის მოლოდინი…",
+ "Location access is needed to record a track.": "ტრეკის ჩასაწერად საჭიროა მდებარეობაზე წვდომა.",
+ "Recording on this phone": "ჩაწერა ამ ტელეფონზე",
+ "A point every %lld s": "წერტილი ყოველ %lld წმ-ში",
+ "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker-ს და სხვა აპებს შეუძლიათ ჩაწერის ჩართვა და გამორთვა: Send Intent, სამიზნე Activity, ერთ-ერთი ქმედება:"
 }

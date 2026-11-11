@@ -109,5 +109,22 @@
  "Deleted tracks and waypoints won't come back after the next download.": "Le tracce e i punti eliminati non torneranno con il prossimo download.",
  "Select a track or waypoint": "Seleziona una traccia o un punto",
  "Selected: %lld": "Selezionati: %lld",
- "Coordinates": "Coordinate"
+ "Coordinates": "Coordinate",
+ "Import files…": "Importa file…",
+ "Tracks added: %lld, waypoints added: %lld.": "Tracce aggiunte: %lld, punti aggiunti: %lld.",
+ "Already in the library: %lld.": "Già nella libreria: %lld.",
+ "Not a GPX, KML, CSV or NMEA file.": "Non è un file GPX, KML, CSV o NMEA.",
+ "The file has no points with a time.": "Il file non contiene punti con l’ora.",
+ "Map": "Mappa",
+ "Show all": "Mostra tutto",
+ "Hide all": "Nascondi tutto",
+ "Choose tracks and waypoints below to show them on the map.": "Scegli qui sotto tracce e punti da mostrare sulla mappa.",
+ "Record a track": "Registra una traccia",
+ "Recording a track": "Registrazione della traccia",
+ "Stop recording": "Interrompi la registrazione",
+ "Waiting for GPS…": "In attesa del GPS…",
+ "Location access is needed to record a track.": "Per registrare una traccia serve l’accesso alla posizione.",
+ "Recording on this phone": "Registrazione su questo telefono",
+ "A point every %lld s": "Un punto ogni %lld s",
+ "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker e altre app possono avviare e fermare la registrazione con Send Intent, destinazione Activity e una di queste azioni:"
 }

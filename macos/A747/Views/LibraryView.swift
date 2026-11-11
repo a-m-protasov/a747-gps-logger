@@ -15,6 +15,7 @@ struct LibraryView: View {
         ResizableSplit {
             VStack(spacing: 0) {
                 list.frame(maxHeight: .infinity)
+                    .dropDestination(for: URL.self) { urls, _ in drop(urls) }
                 Divider()
                 BottomBar(deviceShown: selection.isEmpty) { selection = [] }
             }
@@ -24,6 +25,8 @@ struct LibraryView: View {
         .navigationTitle("Tracks")
         .navigationSubtitle(Text("Tracks: \(model.tracks.count)") + Text(" · ") + Text("Waypoints: \(model.waypoints.count)"))
         .toolbar {
+            Button { model.importWithPanel() } label: { Label("Import files…", systemImage: "square.and.arrow.down") }
+                .help("Import files…")
             ExportMenu(title: selection.isEmpty ? "Export all" : "Export selected", formats: ExportFormat.allCases) { f in
                 let items = selection.isEmpty ? model.items : chosen
                 return try ExportBuilder.files(f, items: items, model: model)
@@ -60,8 +63,13 @@ struct LibraryView: View {
 
     @ViewBuilder private var list: some View {
         if model.items.isEmpty {
-            ContentUnavailableView("No tracks yet", systemImage: "point.topleft.down.to.point.bottomright.curvepath",
-                                   description: Text("Connect the logger and download its memory."))
+            ContentUnavailableView {
+                Label("No tracks yet", systemImage: "point.topleft.down.to.point.bottomright.curvepath")
+            } description: {
+                Text("Connect the logger and download its memory.")
+            } actions: {
+                Button("Import files…") { model.importWithPanel() }
+            }
         } else {
             List(selection: $selection) {
                 ForEach(days, id: \.0) { day, items in
@@ -80,6 +88,14 @@ struct LibraryView: View {
             }
             .onDeleteCommand { if !selection.isEmpty { deleting = selection } }
         }
+    }
+
+    /// Files dropped on the list are imported.
+    private func drop(_ urls: [URL]) -> Bool {
+        let files = urls.filter(\.isFileURL)
+        guard !files.isEmpty else { return false }
+        DispatchQueue.main.async { model.importFiles(files) }
+        return true
     }
 
     @ViewBuilder private var detail: some View {
@@ -163,7 +179,7 @@ struct ItemRow: View {
         HStack(spacing: 10) {
             switch item {
             case .track(let t):
-                icon("point.topleft.down.to.point.bottomright.curvepath", .accentTrack)
+                icon(Self.symbol(t.source), .accentTrack)
                 let span = "\(UI.time(t.stats.startUTC, t.timeZone)) – \(UI.time(t.stats.endUTC, t.timeZone))"
                 let size = "\(UI.distance(t.stats.distanceM)) · \(UI.duration(t.stats.durationS))"
                 texts(t.customName ?? span, t.customName == nil ? size : "\(span) · \(size)")
@@ -174,6 +190,14 @@ struct ItemRow: View {
             }
         }
         .padding(.vertical, 2)
+    }
+
+    static func symbol(_ s: TrackSource) -> String {
+        switch s {
+        case .logger: "point.topleft.down.to.point.bottomright.curvepath"
+        case .imported: "doc"
+        case .phone: "iphone"
+        }
     }
 
     private func icon(_ name: String, _ color: Color) -> some View {

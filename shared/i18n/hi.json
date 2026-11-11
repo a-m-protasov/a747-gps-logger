@@ -109,5 +109,22 @@
  "Deleted tracks and waypoints won't come back after the next download.": "हटाए गए ट्रैक और वेपॉइंट अगली डाउनलोड के बाद वापस नहीं आएँगे।",
  "Select a track or waypoint": "ट्रैक या वेपॉइंट चुनें",
  "Selected: %lld": "चुने गए: %lld",
- "Coordinates": "निर्देशांक"
+ "Coordinates": "निर्देशांक",
+ "Import files…": "फ़ाइलें आयात करें…",
+ "Tracks added: %lld, waypoints added: %lld.": "जोड़े गए ट्रैक: %lld, वेपॉइंट: %lld.",
+ "Already in the library: %lld.": "पहले से लाइब्रेरी में: %lld.",
+ "Not a GPX, KML, CSV or NMEA file.": "यह GPX, KML, CSV या NMEA फ़ाइल नहीं है।",
+ "The file has no points with a time.": "फ़ाइल में समय वाले कोई बिंदु नहीं हैं।",
+ "Map": "मानचित्र",
+ "Show all": "सभी दिखाएँ",
+ "Hide all": "सभी छिपाएँ",
+ "Choose tracks and waypoints below to show them on the map.": "मानचित्र पर दिखाने के लिए नीचे ट्रैक और वेपॉइंट चुनें।",
+ "Record a track": "ट्रैक रिकॉर्ड करें",
+ "Recording a track": "ट्रैक रिकॉर्ड हो रहा है",
+ "Stop recording": "रिकॉर्डिंग रोकें",
+ "Waiting for GPS…": "GPS की प्रतीक्षा…",
+ "Location access is needed to record a track.": "ट्रैक रिकॉर्ड करने के लिए स्थान की अनुमति चाहिए।",
+ "Recording on this phone": "इस फ़ोन पर रिकॉर्डिंग",
+ "A point every %lld s": "हर %lld से. में एक बिंदु",
+ "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker और दूसरे ऐप रिकॉर्डिंग शुरू और बंद कर सकते हैं: Send Intent, लक्ष्य Activity, और इनमें से कोई एक एक्शन:"
 }

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- synthetic: another program's GPX (prefixed namespace, offsets, fractions, two segments) -->
+<g:gpx version="1.1" creator="Other" xmlns:g="http://www.topografix.com/GPX/1/1">
+  <g:wpt lat="44.8125" lon="20.4612"><g:time>2026-06-01T12:00:00+02:00</g:time><g:name>Café &amp; Co</g:name></g:wpt>
+  <g:trk>
+    <g:name><![CDATA[Morning ride]]></g:name>
+    <g:trkseg>
+      <g:trkpt lat=" 44.8000" lon="20.4500"><g:ele>117.5</g:ele><g:time>2026-06-01T08:00:00.750Z</g:time></g:trkpt>
+      <g:trkpt lat="44.8010" lon="20.4510"><g:time>2026-06-01T08:00:05Z</g:time><g:speed>5</g:speed></g:trkpt>
+      <g:trkpt lat="44.8020" lon="20.4520"></g:trkpt>
+    </g:trkseg>
+    <g:trkseg>
+      <g:trkpt lat="44.8100" lon="20.4600"><g:time>2026-06-01T09:00:00Z</g:time></g:trkpt>
+    </g:trkseg>
+  </g:trk>
+</g:gpx>

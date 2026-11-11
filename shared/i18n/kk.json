@@ -109,5 +109,22 @@
  "Deleted tracks and waypoints won't come back after the next download.": "Жойылған тректер мен нүктелер келесі жүктеуде қайтып келмейді.",
  "Select a track or waypoint": "Трек немесе нүкте таңдаңыз",
  "Selected: %lld": "Таңдалды: %lld",
- "Coordinates": "Координаттар"
+ "Coordinates": "Координаттар",
+ "Import files…": "Файлдарды импорттау…",
+ "Tracks added: %lld, waypoints added: %lld.": "Қосылған тректер: %lld, нүктелер: %lld.",
+ "Already in the library: %lld.": "Кітапханада бұрыннан бар: %lld.",
+ "Not a GPX, KML, CSV or NMEA file.": "Бұл GPX, KML, CSV немесе NMEA файлы емес.",
+ "The file has no points with a time.": "Файлда уақыты бар нүктелер жоқ.",
+ "Map": "Карта",
+ "Show all": "Барлығын көрсету",
+ "Hide all": "Барлығын жасыру",
+ "Choose tracks and waypoints below to show them on the map.": "Картада көрсету үшін төменнен тректер мен нүктелерді таңдаңыз.",
+ "Record a track": "Трек жазу",
+ "Recording a track": "Трек жазылып жатыр",
+ "Stop recording": "Жазуды тоқтату",
+ "Waiting for GPS…": "GPS күтілуде…",
+ "Location access is needed to record a track.": "Трек жазу үшін орналасуға рұқсат керек.",
+ "Recording on this phone": "Осы телефонда жазу",
+ "A point every %lld s": "Әр %lld с сайын нүкте",
+ "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker және басқа қолданбалар жазуды қосып-өшіре алады: Send Intent, мақсаты Activity, мына әрекеттердің бірі:"
 }

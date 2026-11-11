@@ -109,5 +109,22 @@
  "Deleted tracks and waypoints won't come back after the next download.": "削除したトラックとウェイポイントは次回のダウンロードでも戻りません。",
  "Select a track or waypoint": "トラックかウェイポイントを選択",
  "Selected: %lld": "選択中：%lld",
- "Coordinates": "座標"
+ "Coordinates": "座標",
+ "Import files…": "ファイルを読み込む…",
+ "Tracks added: %lld, waypoints added: %lld.": "追加したトラック：%lld、ウェイポイント：%lld。",
+ "Already in the library: %lld.": "すでにライブラリにあるもの：%lld。",
+ "Not a GPX, KML, CSV or NMEA file.": "GPX、KML、CSV、NMEA のいずれのファイルでもありません。",
+ "The file has no points with a time.": "時刻付きのポイントがファイルにありません。",
+ "Map": "地図",
+ "Show all": "すべて表示",
+ "Hide all": "すべて隠す",
+ "Choose tracks and waypoints below to show them on the map.": "地図に表示するトラックとウェイポイントを下で選んでください。",
+ "Record a track": "トラックを記録",
+ "Recording a track": "トラックを記録中",
+ "Stop recording": "記録を停止",
+ "Waiting for GPS…": "GPS を待っています…",
+ "Location access is needed to record a track.": "トラックの記録には位置情報へのアクセスが必要です。",
+ "Recording on this phone": "このスマートフォンで記録",
+ "A point every %lld s": "%lld 秒ごとに 1 ポイント",
+ "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker などのアプリから記録を開始・停止できます：Send Intent、ターゲットは Activity、アクションは次のいずれか："
 }

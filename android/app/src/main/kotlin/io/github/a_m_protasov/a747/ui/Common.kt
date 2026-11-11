@@ -166,7 +166,7 @@ fun MapWeb(tracks: List<List<LogPoint>>, waypoints: List<Waypoint>, modifier: Mo
             }
         })
         put("waypoints", JSONArray().apply {
-            for (w in waypoints) put(JSONObject().put("lon", w.point.lon).put("lat", w.point.lat).put("name", w.name))
+            for (w in waypoints) put(JSONObject().put("lon", w.point.lon).put("lat", w.point.lat).put("name", w.title))
         })
         put("style", JSONObject()
             .put("mode", if (bySpeed) "speed" else "solid")

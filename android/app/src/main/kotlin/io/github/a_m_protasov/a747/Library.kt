@@ -3,6 +3,7 @@ package io.github.a_m_protasov.a747
 import io.github.a_m_protasov.a747.core.DownloadState
 import io.github.a_m_protasov.a747.core.LogParser
 import io.github.a_m_protasov.a747.core.LogPoint
+import io.github.a_m_protasov.a747.core.PointsFile
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
@@ -87,7 +88,40 @@ class Library(private val dir: File) {
         return dedupe(points) to dedupe(wpts)
     }
 
-    private fun dedupe(pts: List<LogPoint>): List<LogPoint> {
+    // MARK: Track files
+
+    /**
+     * Tracks imported from files or recorded on this phone: one track (or a set of waypoints) per
+     * file in `tracks/`, in the PointsFile format. Names start with `import-` or `phone-`.
+     */
+    val tracksDir = File(dir, "tracks")
+
+    class TrackFile(val file: File, val track: List<LogPoint>, val waypoints: List<LogPoint>) {
+        val isPhone get() = file.name.startsWith("phone-")
+    }
+
+    fun loadFiles(): List<TrackFile> =
+        tracksDir.listFiles { f -> f.name.endsWith(".csv") }.orEmpty().sortedBy { it.name }.mapNotNull { f ->
+            runCatching { PointsFile.decode(f.readText()) }.getOrNull()?.let { (t, w) -> TrackFile(f, t, w) }
+        }
+
+    fun addFile(track: List<LogPoint> = emptyList(), waypoints: List<LogPoint> = emptyList()): File {
+        tracksDir.mkdirs()
+        val first = (track.firstOrNull() ?: waypoints.firstOrNull())?.utc ?: 0
+        val f = File(tracksDir, "import-$first-${UUID.randomUUID().toString().take(8)}.csv")
+        val tmp = File(tracksDir, f.name + ".tmp")
+        tmp.writeText(PointsFile.encode(track, waypoints))
+        tmp.renameTo(f)
+        return f
+    }
+
+    /** A new file for a recording on this phone (points are appended as they come). */
+    fun newRecording(startUtc: Long): File {
+        tracksDir.mkdirs()
+        return File(tracksDir, "phone-$startUtc.csv").apply { writeText(PointsFile.HEADER) }
+    }
+
+    fun dedupe(pts: List<LogPoint>): List<LogPoint> {
         val seen = HashSet<Triple<Long, Double, Double>>()
         return pts.sortedBy { it.utc }.filter { seen.add(Triple(it.utc, it.lat, it.lon)) }
     }
@@ -129,6 +163,13 @@ class LibraryEdits(private val file: File) {
     fun delete(tracks: List<LongRange>, waypoints: List<Long>) {
         deletedTracks = deletedTracks + tracks
         deletedWaypoints = deletedWaypoints + waypoints
+        save()
+    }
+
+    /** Waypoints imported again come back. */
+    @Synchronized
+    fun undelete(waypoints: List<Long>) {
+        deletedWaypoints = deletedWaypoints - waypoints.toSet()
         save()
     }
 

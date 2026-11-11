@@ -5,6 +5,8 @@ import io.github.a_m_protasov.a747.core.DeviceInfo
 import io.github.a_m_protasov.a747.core.DownloadPlan
 import io.github.a_m_protasov.a747.core.Downloader
 import io.github.a_m_protasov.a747.core.Exporter
+import io.github.a_m_protasov.a747.core.ImportException
+import io.github.a_m_protasov.a747.core.Importer
 import io.github.a_m_protasov.a747.core.LiveStatus
 import io.github.a_m_protasov.a747.core.LogParser
 import io.github.a_m_protasov.a747.core.LogPoint
@@ -32,6 +34,8 @@ import java.time.ZoneId
 /** A row of the library list: tracks and waypoints together, newest first. */
 sealed interface Item {
     val key: String
+    /** Stable across downloads that add points to a track (for the map's choice). */
+    val mapKey get() = (if (this is Track) "t" else "w") + utc
     val utc: Long
     val day: LocalDate
     val zone: ZoneId
@@ -42,9 +46,14 @@ sealed interface Item {
     val title get() = customName ?: name
 }
 
+/** Where a track came from. */
+enum class Source { LOGGER, IMPORTED, PHONE }
+
 data class Track(val points: List<LogPoint>, val stats: TrackStats, override val name: String, override val customName: String?,
-                 override val day: LocalDate, override val zone: ZoneId) : Item {
-    val id get() = stats.id
+                 override val day: LocalDate, override val zone: ZoneId, val source: Source = Source.LOGGER,
+                 /** The file of an imported or phone track; deleting the track deletes it. */
+                 val file: File? = null) : Item {
+    val id get() = file?.let { "f:${it.name}" } ?: stats.id
     override val key get() = "t:$id"
     override val utc get() = stats.startUtc
 }
@@ -96,6 +105,20 @@ class Repo(private val ctx: Context) {
     var trackColor: String
         get() = prefs.getString("trackColor", "#1F8A70")!!
         set(v) { prefs.edit().putString("trackColor", v).apply() }
+    /** Tracks and waypoints shown on the Map screen ([Item.mapKey]). */
+    var mapShown: Set<String>
+        get() = prefs.getStringSet("mapShown", emptySet())!!.toSet()
+        set(v) { prefs.edit().putStringSet("mapShown", v).apply() }
+    /** Seconds between points when recording on this phone. */
+    var recordIntervalS: Int
+        get() = prefs.getInt("recordIntervalS", 5)
+        set(v) { prefs.edit().putInt("recordIntervalS", v).apply() }
+
+    /** The recording on this phone in progress, see [device.RecordService]. */
+    data class Recording(val file: File?, val points: Int = 0, val distanceM: Double = 0.0, val startUtc: Long? = null,
+                         val last: LogPoint? = null)
+    val recording = MutableStateFlow<Recording?>(null)
+
     var showWaypointsOnTrack: Boolean
         get() = prefs.getBoolean("showWaypointsOnTrack", false)
         set(v) { prefs.edit().putBoolean("showWaypointsOnTrack", v).apply() }
@@ -107,23 +130,92 @@ class Repo(private val ctx: Context) {
     init { reload() }
 
     fun reload() {
-        scope.launch {
-            val (all, allWpts) = library.load(System.currentTimeMillis() / 1000)
-            val points = all.filterNot { edits.isDeleted(it.utc) }
-            val wpts = allWpts.filterNot { it.utc in edits.deletedWaypoints }
+        scope.launch { build() }
+    }
+
+    @Synchronized
+    private fun build() {
+        val (all, allWpts) = library.load(System.currentTimeMillis() / 1000)
+        val points = all.filterNot { edits.isDeleted(it.utc) }
+        val files = library.loadFiles()
+        val wpts = library.dedupe(allWpts + files.flatMap { it.waypoints }).filterNot { it.utc in edits.deletedWaypoints }
+        val ex = exporter
+        fun day(p: LogPoint, zone: ZoneId) = java.time.Instant.ofEpochSecond(p.utc).atZone(zone).toLocalDate()
+        fun track(t: List<LogPoint>, source: Source, file: File?): Track {
+            val zone = tz.zone(t[0].lat, t[0].lon)
+            return Track(t, Tracks.stats(t), ex.name(t[0]), edits.names[t[0].utc], day(t[0], zone), zone, source, file)
+        }
+        val logger = Tracks.split(points, splitGapMinutes * 60L).map { track(it, Source.LOGGER, null) }
+        val imported = files.filter { it.track.isNotEmpty() }
+            .map { track(it.track, if (it.isPhone) Source.PHONE else Source.IMPORTED, it.file) }
+        val t = (logger + imported).sortedByDescending { it.utc }
+        val w = wpts.map {
+            val zone = tz.zone(it.lat, it.lon)
+            Waypoint(it, ex.name(it), edits.names[it.utc], day(it, zone), zone)
+        }.reversed()
+        tracks.value = t
+        waypoints.value = w
+        items.value = (t + w).sortedByDescending { it.utc }
+    }
+
+    /**
+     * Adds GPX, KML, CSV and NMEA files, and raw .bin dumps of the logger's memory. A track or
+     * waypoint that is already in the library is skipped; names in the files are kept.
+     */
+    fun importFiles(files: List<Pair<String, ByteArray>>) {
+        scope.launch(Dispatchers.IO) {
+            build()
+            var tracksAdded = 0
+            var wptsAdded = 0
+            var skipped = 0
+            val failed = ArrayList<String>()
             val ex = exporter
-            fun day(p: LogPoint, zone: ZoneId) = java.time.Instant.ofEpochSecond(p.utc).atZone(zone).toLocalDate()
-            val t = Tracks.split(points, splitGapMinutes * 60L).map { t ->
-                val zone = tz.zone(t[0].lat, t[0].lon)
-                Track(t, Tracks.stats(t), ex.name(t[0]), edits.names[t[0].utc], day(t[0], zone), zone)
-            }.reversed()
-            val w = wpts.map {
-                val zone = tz.zone(it.lat, it.lon)
-                Waypoint(it, ex.name(it), edits.names[it.utc], day(it, zone), zone)
-            }.reversed()
-            tracks.value = t
-            waypoints.value = w
-            items.value = (t + w).sortedByDescending { it.utc }
+            val names = HashMap<Long, String>()
+            for ((name, data) in files) {
+                try {
+                    if (name.lowercase().endsWith(".bin")) {
+                        LogParser.parse(data, 0, data.size, System.currentTimeMillis() / 1000)
+                        val before = tracks.value.size to waypoints.value.size
+                        library.add(io.github.a_m_protasov.a747.core.DownloadState(0, "import", data.size.toLong(), data), replacingLast = false)
+                        build()
+                        tracksAdded += maxOf(0, tracks.value.size - before.first)
+                        wptsAdded += maxOf(0, waypoints.value.size - before.second)
+                        continue
+                    }
+                    val r = Importer.parse(data, name)
+                    for (t in r.tracks) {
+                        if (tracks.value.any { it.stats.startUtc == t[0].utc && it.stats.endUtc == t.last().utc }) { skipped++; continue }
+                        library.addFile(track = t)
+                        tracksAdded++
+                    }
+                    val have = waypoints.value.map { it.point.utc }.toSet()
+                    val newWpts = r.waypoints.filter { it.utc !in have }
+                    skipped += r.waypoints.size - newWpts.size
+                    if (newWpts.isNotEmpty()) {
+                        library.addFile(waypoints = newWpts)
+                        wptsAdded += newWpts.size
+                        edits.undelete(newWpts.map { it.utc })
+                    }
+                    for ((utc, n) in r.names) {
+                        if (edits.names.containsKey(utc)) continue
+                        val p = r.tracks.firstOrNull { it[0].utc == utc }?.get(0) ?: r.waypoints.firstOrNull { it.utc == utc } ?: continue
+                        if (n != ex.name(p)) names[utc] = n
+                    }
+                    build()
+                } catch (e: Exception) {
+                    failed += "$name: " + when (e) {
+                        is ImportException.UnknownFormat -> ctx.getString(R.string.not_a_gpx_kml_csv_or_nmea_file)
+                        is ImportException.NoTimedPoints -> ctx.getString(R.string.the_file_has_no_points_with_a_time)
+                        else -> errorText(e)
+                    }
+                }
+            }
+            for ((utc, n) in names) edits.rename(utc, n)
+            build()
+            var msg = ctx.getString(R.string.tracks_added_n_waypoints_added_n, tracksAdded, wptsAdded)
+            if (skipped > 0) msg += " " + ctx.getString(R.string.already_in_the_library_n, skipped)
+            if (failed.isNotEmpty()) msg += "\n" + failed.joinToString("\n")
+            message.value = msg
         }
     }
 
@@ -134,7 +226,9 @@ class Repo(private val ctx: Context) {
     }
 
     fun delete(items: List<Item>) {
-        edits.delete(items.filterIsInstance<Track>().map { it.stats.startUtc..it.stats.endUtc },
+        val active = recording.value?.file
+        for (t in items.filterIsInstance<Track>()) t.file?.takeIf { it != active }?.delete()
+        edits.delete(items.filterIsInstance<Track>().filter { it.file == null }.map { it.stats.startUtc..it.stats.endUtc },
             items.filterIsInstance<Waypoint>().map { it.point.utc })
         reload()
     }

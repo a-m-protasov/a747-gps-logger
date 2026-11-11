@@ -109,5 +109,22 @@
  "Deleted tracks and waypoints won't come back after the next download.": "Trek dan titik yang dihapus tidak akan kembali setelah unduhan berikutnya.",
  "Select a track or waypoint": "Pilih trek atau titik",
  "Selected: %lld": "Dipilih: %lld",
- "Coordinates": "Koordinat"
+ "Coordinates": "Koordinat",
+ "Import files…": "Impor file…",
+ "Tracks added: %lld, waypoints added: %lld.": "Trek ditambahkan: %lld, titik ditambahkan: %lld.",
+ "Already in the library: %lld.": "Sudah ada di pustaka: %lld.",
+ "Not a GPX, KML, CSV or NMEA file.": "Bukan file GPX, KML, CSV, atau NMEA.",
+ "The file has no points with a time.": "File tidak memiliki titik dengan waktu.",
+ "Map": "Peta",
+ "Show all": "Tampilkan semua",
+ "Hide all": "Sembunyikan semua",
+ "Choose tracks and waypoints below to show them on the map.": "Pilih trek dan titik di bawah untuk menampilkannya di peta.",
+ "Record a track": "Rekam trek",
+ "Recording a track": "Merekam trek",
+ "Stop recording": "Hentikan perekaman",
+ "Waiting for GPS…": "Menunggu GPS…",
+ "Location access is needed to record a track.": "Akses lokasi diperlukan untuk merekam trek.",
+ "Recording on this phone": "Perekaman di ponsel ini",
+ "A point every %lld s": "Satu titik setiap %lld dtk",
+ "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker dan aplikasi lain dapat memulai dan menghentikan perekaman dengan Send Intent, target Activity, dan salah satu aksi berikut:"
 }

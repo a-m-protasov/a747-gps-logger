@@ -109,5 +109,22 @@
  "Deleted tracks and waypoints won't come back after the next download.": "Silinen rotalar ve noktalar bir sonraki indirmede geri gelmez.",
  "Select a track or waypoint": "Bir rota veya nokta seçin",
  "Selected: %lld": "Seçilen: %lld",
- "Coordinates": "Koordinatlar"
+ "Coordinates": "Koordinatlar",
+ "Import files…": "Dosyaları içe aktar…",
+ "Tracks added: %lld, waypoints added: %lld.": "Eklenen rota: %lld, eklenen nokta: %lld.",
+ "Already in the library: %lld.": "Zaten kitaplıkta: %lld.",
+ "Not a GPX, KML, CSV or NMEA file.": "GPX, KML, CSV veya NMEA dosyası değil.",
+ "The file has no points with a time.": "Dosyada zamanı olan nokta yok.",
+ "Map": "Harita",
+ "Show all": "Tümünü göster",
+ "Hide all": "Tümünü gizle",
+ "Choose tracks and waypoints below to show them on the map.": "Haritada göstermek için aşağıdan rota ve nokta seçin.",
+ "Record a track": "Rota kaydet",
+ "Recording a track": "Rota kaydediliyor",
+ "Stop recording": "Kaydı durdur",
+ "Waiting for GPS…": "GPS bekleniyor…",
+ "Location access is needed to record a track.": "Rota kaydetmek için konum erişimi gerekir.",
+ "Recording on this phone": "Bu telefonda kayıt",
+ "A point every %lld s": "Her %lld sn'de bir nokta",
+ "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker ve diğer uygulamalar kaydı başlatıp durdurabilir: Send Intent, hedef Activity ve şu eylemlerden biri:"
 }

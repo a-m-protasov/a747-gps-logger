@@ -109,5 +109,22 @@
  "Deleted tracks and waypoints won't come back after the next download.": "已删除的轨迹和航点在下次下载后不会恢复。",
  "Select a track or waypoint": "选择轨迹或航点",
  "Selected: %lld": "已选：%lld",
- "Coordinates": "坐标"
+ "Coordinates": "坐标",
+ "Import files…": "导入文件…",
+ "Tracks added: %lld, waypoints added: %lld.": "已添加轨迹：%lld，航点：%lld。",
+ "Already in the library: %lld.": "已在资料库中：%lld。",
+ "Not a GPX, KML, CSV or NMEA file.": "不是 GPX、KML、CSV 或 NMEA 文件。",
+ "The file has no points with a time.": "文件中没有带时间的点。",
+ "Map": "地图",
+ "Show all": "全部显示",
+ "Hide all": "全部隐藏",
+ "Choose tracks and waypoints below to show them on the map.": "在下方选择要在地图上显示的轨迹和航点。",
+ "Record a track": "记录轨迹",
+ "Recording a track": "正在记录轨迹",
+ "Stop recording": "停止记录",
+ "Waiting for GPS…": "正在等待 GPS…",
+ "Location access is needed to record a track.": "记录轨迹需要位置权限。",
+ "Recording on this phone": "在此手机上记录",
+ "A point every %lld s": "每 %lld 秒一个点",
+ "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker 等应用可以开始和停止记录：Send Intent，目标 Activity，使用以下操作之一："
 }

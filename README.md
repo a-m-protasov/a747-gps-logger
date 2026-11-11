@@ -79,6 +79,13 @@ These apps fix all of that and give you the tracks in common formats.
 - **Export**: GPX 1.1, KML, CSV, or the raw BIN image — one track, a selection, or everything,
   each track in its own file.
   Share to Mail, Messages, Google Drive and so on, or save anywhere including iCloud Drive.
+- **Import**: GPX, KML (with times), CSV, NMEA and raw BIN dumps from other programs or other
+  devices. Tracks and waypoints already in the library are skipped; names in the files are
+  kept. On the Mac, files can also be dropped on the list.
+- **Map** (Android): any number of tracks and waypoints on one map, ticked in a list under it.
+- **Record on the phone** (Android): a track from the phone's own GPS, one point every
+  1–60 s, running with the screen off. Start and stop it in the app, from the notification, or
+  from [Tasker](#recording-from-tasker) and similar apps.
 - **Library**: everything downloaded stays on your device; re-downloading never duplicates.
 - **19 languages**: English, Russian, Serbian, Ukrainian, Kazakh, Georgian, Spanish,
   Portuguese (Brazil), French, German, Italian, Polish, Turkish, Chinese (Simplified),
@@ -117,6 +124,20 @@ Download from [Releases](../../releases).
    access to the device.
 3. **Bluetooth**: pair the logger in the system Bluetooth settings (PIN `0000`), then tap
    **Connect by Bluetooth** in the app.
+
+### Recording from Tasker
+
+Use the **Send Intent** action with **Target: Activity** and one of these actions:
+
+```
+io.github.a_m_protasov.a747.action.START_RECORDING
+io.github.a_m_protasov.a747.action.STOP_RECORDING
+io.github.a_m_protasov.a747.action.TOGGLE_RECORDING
+```
+
+Start recording once from the app first, so Android asks for location access. After that it
+works with the screen locked too. Tasker needs its usual "Display over other apps" permission
+to start activities from the background.
 
 ## Privacy
 

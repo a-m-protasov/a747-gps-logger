@@ -2,6 +2,10 @@ import A747Core
 import Foundation
 import Observation
 import SwiftUI
+import UniformTypeIdentifiers
+
+/// Where a track came from.
+enum TrackSource { case logger, imported, phone }
 
 struct Track: Identifiable, Hashable {
     let points: [LogPoint]
@@ -12,7 +16,10 @@ struct Track: Identifiable, Hashable {
     let customName: String?
     let day: String
     let timeZone: TimeZone
-    var id: String { stats.id }
+    var source: TrackSource = .logger
+    /// The file of an imported or phone track; deleting the track deletes it.
+    var file: URL?
+    var id: String { file.map { "f:" + $0.lastPathComponent } ?? stats.id }
     var title: String { customName ?? name }
 
     static func == (a: Track, b: Track) -> Bool { a.id == b.id }
@@ -104,6 +111,8 @@ final class AppModel {
         let now = Int64(Date().timeIntervalSince1970)
         var (points, wpts, _) = library.load(now: now)
         points.removeAll { edits.isDeleted(point: $0.utc) }
+        let files = library.loadFiles()
+        wpts = LibraryStore.dedupe(wpts + files.flatMap(\.waypoints))
         wpts.removeAll { edits.deletedWaypoints.contains($0.utc) }
         let ex = exporter
         let dayFmt = DateFormatter()
@@ -113,11 +122,14 @@ final class AppModel {
             dayFmt.timeZone = zone
             return dayFmt.string(from: Date(timeIntervalSince1970: TimeInterval(p.utc)))
         }
-        tracks = Tracks.split(points, gapSeconds: Int64(splitGapMinutes) * 60).map { t in
+        func track(_ t: [LogPoint], _ source: TrackSource, _ file: URL?) -> Track {
             let zone = tz.timeZone(lat: t[0].lat, lon: t[0].lon)
             return Track(points: t, stats: Tracks.stats(t), name: ex.name(t[0]), customName: edits.names[t[0].utc],
-                         day: day(t[0], zone), timeZone: zone)
-        }.reversed()
+                         day: day(t[0], zone), timeZone: zone, source: source, file: file)
+        }
+        let logger = Tracks.split(points, gapSeconds: Int64(splitGapMinutes) * 60).map { track($0, .logger, nil) }
+        let imported = files.filter { !$0.track.isEmpty }.map { track($0.track, $0.isPhone ? .phone : .imported, $0.url) }
+        tracks = (logger + imported).sorted { $0.stats.startUTC > $1.stats.startUTC }
         waypoints = wpts.map {
             let zone = tz.timeZone(lat: $0.lat, lon: $0.lon)
             return Waypoint(point: $0, name: ex.name($0), customName: edits.names[$0.utc], day: day($0, zone), timeZone: zone)
@@ -142,7 +154,9 @@ final class AppModel {
     func delete(_ ids: Set<String>) {
         for item in items where ids.contains(item.id) {
             switch item {
-            case .track(let t): edits.deletedTracks.append([t.stats.startUTC, t.stats.endUTC])
+            case .track(let t):
+                if let f = t.file { try? FileManager.default.removeItem(at: f) }
+                else { edits.deletedTracks.append([t.stats.startUTC, t.stats.endUTC]) }
             case .waypoint(let w): edits.deletedWaypoints.insert(w.point.utc)
             }
         }
@@ -225,21 +239,79 @@ final class AppModel {
         }
     }
 
-    /// Adds a raw .bin (e.g. exported earlier or read by another tool) to the library.
-    /// Without device info the whole file is parsed; a mirrored 8 MB dump is de-duplicated.
-    func importDump() {
+    /// Asks for files and imports them.
+    func importWithPanel() {
         let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.data]
-        panel.allowsMultipleSelection = false
-        guard panel.runModal() == .OK, let url = panel.url else { return }
-        do {
-            let data = try Data(contentsOf: url)
-            _ = try LogParser.parse(image: data, flashID: 0, writeAddr: data.count, now: Int64(Date().timeIntervalSince1970))
-            try library.add(DownloadState(flashID: 0, model: "import", writeAddr: UInt32(data.count), image: data),
-                            replacingLast: false)
-            reload()
-        } catch {
-            NSAlert(error: error).runModal()
+        panel.allowedContentTypes = Self.importTypes
+        panel.allowsMultipleSelection = true
+        guard panel.runModal() == .OK else { return }
+        importFiles(panel.urls)
+    }
+
+    static let importTypes: [UTType] = ["gpx", "kml", "csv", "nmea", "txt", "log", "bin"]
+        .compactMap { UTType(filenameExtension: $0) } + [.commaSeparatedText, .xml, .data]
+
+    /// Adds GPX, KML, CSV and NMEA files, and raw .bin dumps of the logger's memory. A track or
+    /// waypoint that is already in the library is skipped; names in the files are kept.
+    func importFiles(_ urls: [URL]) {
+        var tracksAdded = 0, wptsAdded = 0, skipped = 0
+        var failed: [String] = []
+        let ex = exporter
+        for url in urls {
+            do {
+                let data = try Data(contentsOf: url)
+                if url.pathExtension.lowercased() == "bin" {
+                    // a dump: without device info the whole file is parsed; a mirrored 8 MB dump is de-duplicated
+                    _ = try LogParser.parse(image: data, flashID: 0, writeAddr: data.count, now: Int64(Date().timeIntervalSince1970))
+                    let before = (tracks.count, waypoints.count)
+                    try library.add(DownloadState(flashID: 0, model: "import", writeAddr: UInt32(data.count), image: data),
+                                    replacingLast: false)
+                    reload()
+                    tracksAdded += max(0, tracks.count - before.0)
+                    wptsAdded += max(0, waypoints.count - before.1)
+                    continue
+                }
+                let r = try Importer.parse(data, fileName: url.lastPathComponent)
+                for t in r.tracks {
+                    if tracks.contains(where: { $0.stats.startUTC == t[0].utc && $0.stats.endUTC == t[t.count - 1].utc }) {
+                        skipped += 1; continue
+                    }
+                    try library.addFile(track: t)
+                    tracksAdded += 1
+                }
+                let have = Set(waypoints.map(\.point.utc))
+                let newWpts = r.waypoints.filter { !have.contains($0.utc) }
+                skipped += r.waypoints.count - newWpts.count
+                if !newWpts.isEmpty {
+                    try library.addFile(waypoints: newWpts)
+                    wptsAdded += newWpts.count
+                    for w in newWpts { edits.deletedWaypoints.remove(w.utc) }
+                }
+                for (utc, name) in r.names where edits.names[utc] == nil {
+                    let p = (r.tracks.first { $0[0].utc == utc }?[0]) ?? r.waypoints.first { $0.utc == utc }
+                    if let p, name != ex.name(p) { edits.names[utc] = name }
+                }
+                reload()
+            } catch {
+                failed.append(url.lastPathComponent + ": " + Self.importErrorText(error))
+            }
+        }
+        edits.save(library.dir)
+        reload()
+        let alert = NSAlert()
+        alert.messageText = String(localized: "Tracks added: \(tracksAdded), waypoints added: \(wptsAdded).")
+        var text = skipped > 0 ? String(localized: "Already in the library: \(skipped).") : ""
+        if !failed.isEmpty { text += (text.isEmpty ? "" : "\n\n") + failed.joined(separator: "\n") }
+        alert.informativeText = text
+        if !failed.isEmpty { alert.alertStyle = .warning }
+        alert.runModal()
+    }
+
+    static func importErrorText(_ e: Error) -> String {
+        switch e {
+        case ImportError.unknownFormat: String(localized: "Not a GPX, KML, CSV or NMEA file.")
+        case ImportError.noTimedPoints: String(localized: "The file has no points with a time.")
+        default: e.localizedDescription
         }
     }
 

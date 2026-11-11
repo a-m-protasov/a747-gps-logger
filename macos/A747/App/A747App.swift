@@ -13,7 +13,7 @@ struct A747App: App {
         .windowToolbarStyle(.unified)
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button("Import Raw Dump…") { model.importDump() }
+                Button("Import files…") { model.importWithPanel() }
                     .keyboardShortcut("i", modifiers: [.command, .shift])
             }
             CommandGroup(after: .help) {

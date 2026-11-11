@@ -12,6 +12,11 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- recording a track with the phone's own GPS -->
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
 
     <application
         android:name=".A747App"
@@ -43,6 +48,26 @@
             android:name=".device.DownloadService"
             android:exported="false"
             android:foregroundServiceType="connectedDevice" />
+
+        <service
+            android:name=".device.RecordService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
+
+        <!-- start/stop recording from other apps (Tasker: Send Intent, target Activity) -->
+        <activity
+            android:name=".device.RecordControlActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="io.github.a_m_protasov.a747.action.START_RECORDING" />
+                <action android:name="io.github.a_m_protasov.a747.action.STOP_RECORDING" />
+                <action android:name="io.github.a_m_protasov.a747.action.TOGGLE_RECORDING" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
 
         <provider
             android:name="androidx.core.content.FileProvider"

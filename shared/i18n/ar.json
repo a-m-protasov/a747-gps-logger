@@ -109,5 +109,22 @@
  "Deleted tracks and waypoints won't come back after the next download.": "لن تعود المسارات والنقاط المحذوفة بعد التنزيل التالي.",
  "Select a track or waypoint": "اختر مسارًا أو نقطة",
  "Selected: %lld": "المحدد: %lld",
- "Coordinates": "الإحداثيات"
+ "Coordinates": "الإحداثيات",
+ "Import files…": "استيراد ملفات…",
+ "Tracks added: %lld, waypoints added: %lld.": "المسارات المضافة: %lld، النقاط المضافة: %lld.",
+ "Already in the library: %lld.": "موجودة بالفعل في المكتبة: %lld.",
+ "Not a GPX, KML, CSV or NMEA file.": "ليس ملف GPX أو KML أو CSV أو NMEA.",
+ "The file has no points with a time.": "لا يحتوي الملف على نقاط بها وقت.",
+ "Map": "الخريطة",
+ "Show all": "إظهار الكل",
+ "Hide all": "إخفاء الكل",
+ "Choose tracks and waypoints below to show them on the map.": "اختر المسارات والنقاط أدناه لعرضها على الخريطة.",
+ "Record a track": "تسجيل مسار",
+ "Recording a track": "جارٍ تسجيل مسار",
+ "Stop recording": "إيقاف التسجيل",
+ "Waiting for GPS…": "في انتظار GPS…",
+ "Location access is needed to record a track.": "يلزم الوصول إلى الموقع لتسجيل مسار.",
+ "Recording on this phone": "التسجيل على هذا الهاتف",
+ "A point every %lld s": "نقطة كل %lld ث",
+ "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "يمكن لـ Tasker والتطبيقات الأخرى بدء التسجيل وإيقافه: Send Intent، الهدف Activity، وأحد هذه الإجراءات:"
 }

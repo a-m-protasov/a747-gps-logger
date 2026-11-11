@@ -79,6 +79,24 @@ selected the right side shows the device.
   to is remembered. Android: the map takes 2/3 of the detail screen, outside any scrolling
   container so pan and zoom are smooth.
 
+- **Import** (Mac and Android): GPX (tracks, routes, waypoints; any namespace prefix),
+  KML (`gx:Track` and placemarks with a time), CSV (this app's columns or common ones such as
+  latitude/longitude/time), NMEA (RMC, altitude from GGA) and raw BIN dumps. Points without a
+  time are skipped. Parsing lives in the shared cores (`Importer`) with the same tests in
+  Swift and Kotlin (`fixtures/import/`). Each imported track is one file in `tracks/`
+  (`import-<utc>-<id>.csv`, `PointsFile` format) and is never split; deleting it deletes the
+  file. A track with the same start and end as one in the library, or a waypoint at the same
+  second, is skipped. Names in the file become user names unless they equal the default name.
+- **Map screen** (Android): the tracks and waypoints ticked in the list under the map are
+  shown together; the choice is remembered.
+- **Recording on the phone** (Android): a foreground location service writes GPS fixes
+  (accuracy ≤ 100 m, one every 1–60 s, default 5) straight into `tracks/phone-<utc>.csv`.
+  Started from the Map screen, stopped from there or the notification. Other apps (Tasker)
+  use an invisible exported activity with the actions `…action.START_RECORDING`,
+  `STOP_RECORDING`, `TOGGLE_RECORDING`; it shows over the lock screen, because Android starts
+  location services only for a visible app. Without location access and with the screen
+  locked it posts a notification instead of a permission dialog.
+
 ### Export and sharing
 - Formats: GPX 1.1, KML, CSV, BIN (raw dump).
 - One track, a selection, or everything. Each track goes into its own file, the selected
@@ -88,7 +106,8 @@ selected the right side shows the device.
   Google Drive via the Android document picker). No cloud SDKs, no OAuth.
 
 ### Settings
-- Track split gap, units (from system region, overridable), map layer for waypoints.
+- Track split gap, units (from system region, overridable), map layer for waypoints,
+  phone recording interval (Android).
 - No analytics, no crash reporting. The only network traffic is map tiles.
 
 ## Localization

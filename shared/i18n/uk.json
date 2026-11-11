@@ -109,5 +109,22 @@
  "Deleted tracks and waypoints won't come back after the next download.": "Видалені треки й точки не повернуться під час наступного завантаження.",
  "Select a track or waypoint": "Виберіть трек або точку",
  "Selected: %lld": "Вибрано: %lld",
- "Coordinates": "Координати"
+ "Coordinates": "Координати",
+ "Import files…": "Імпортувати файли…",
+ "Tracks added: %lld, waypoints added: %lld.": "Додано треків: %lld, точок: %lld.",
+ "Already in the library: %lld.": "Уже були в бібліотеці: %lld.",
+ "Not a GPX, KML, CSV or NMEA file.": "Це не файл GPX, KML, CSV чи NMEA.",
+ "The file has no points with a time.": "У файлі немає точок із часом.",
+ "Map": "Мапа",
+ "Show all": "Показати все",
+ "Hide all": "Приховати все",
+ "Choose tracks and waypoints below to show them on the map.": "Позначте нижче треки й точки, щоб показати їх на мапі.",
+ "Record a track": "Записати трек",
+ "Recording a track": "Триває запис треку",
+ "Stop recording": "Зупинити запис",
+ "Waiting for GPS…": "Очікування GPS…",
+ "Location access is needed to record a track.": "Для запису треку потрібен доступ до геолокації.",
+ "Recording on this phone": "Запис на цьому телефоні",
+ "A point every %lld s": "Точка кожні %lld с",
+ "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker та інші застосунки можуть вмикати й вимикати запис: Send Intent, ціль Activity, одна з дій:"
 }

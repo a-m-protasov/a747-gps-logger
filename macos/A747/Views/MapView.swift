@@ -52,7 +52,7 @@ struct MapView: NSViewRepresentable {
             if idx.last != t.count - 1 { idx.append(t.count - 1) }
             return ["c": idx.map { [t[$0].lon, t[$0].lat] }, "s": idx.map { (speeds[$0] * 10).rounded() / 10 }]
         }
-        let wpts = waypoints.map { ["lon": $0.point.lon, "lat": $0.point.lat, "name": $0.name] as [String: Any] }
+        let wpts = waypoints.map { ["lon": $0.point.lon, "lat": $0.point.lat, "name": $0.title] as [String: Any] }
         let metric = UI.units.isMetric
         let mf = MeasurementFormatter()
         mf.unitStyle = .short

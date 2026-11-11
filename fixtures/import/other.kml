@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- synthetic: a KML track with times and a timed placemark -->
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+<Document>
+  <Placemark><name>Walk</name>
+    <gx:Track>
+      <when>2026-06-02T10:00:00Z</when><when>2026-06-02T10:00:10Z</when>
+      <gx:coord>20.45 44.80 120</gx:coord><gx:coord>20.46 44.81 121</gx:coord>
+    </gx:Track>
+  </Placemark>
+  <Placemark><name>Bench</name><TimeStamp><when>2026-06-02T10:05:00Z</when></TimeStamp>
+    <Point><coordinates>20.47,44.82,0</coordinates></Point></Placemark>
+  <Placemark><name>No time</name><LineString><coordinates>20.4,44.8 20.5,44.9</coordinates></LineString></Placemark>
+</Document>
+</kml>

@@ -109,5 +109,22 @@
  "Deleted tracks and waypoints won't come back after the next download.": "Обрисане трасе и тачке се неће вратити при следећем преузимању.",
  "Select a track or waypoint": "Изаберите трасу или тачку",
  "Selected: %lld": "Изабрано: %lld",
- "Coordinates": "Координате"
+ "Coordinates": "Координате",
+ "Import files…": "Увези датотеке…",
+ "Tracks added: %lld, waypoints added: %lld.": "Додато траса: %lld, тачака: %lld.",
+ "Already in the library: %lld.": "Већ у библиотеци: %lld.",
+ "Not a GPX, KML, CSV or NMEA file.": "Ово није GPX, KML, CSV ни NMEA датотека.",
+ "The file has no points with a time.": "Датотека нема тачке са временом.",
+ "Map": "Мапа",
+ "Show all": "Прикажи све",
+ "Hide all": "Сакриј све",
+ "Choose tracks and waypoints below to show them on the map.": "Изаберите испод трасе и тачке да бисте их видели на мапи.",
+ "Record a track": "Сними трасу",
+ "Recording a track": "Снима се траса",
+ "Stop recording": "Заустави снимање",
+ "Waiting for GPS…": "Чека се GPS…",
+ "Location access is needed to record a track.": "За снимање трасе потребан је приступ локацији.",
+ "Recording on this phone": "Снимање на овом телефону",
+ "A point every %lld s": "Тачка сваких %lld s",
+ "Tasker and other apps can start and stop recording with Send Intent, target Activity, and one of these actions:": "Tasker и друге апликације могу да покрену и зауставе снимање: Send Intent, циљ Activity, једна од ових радњи:"
 }

@@ -78,6 +78,39 @@ struct LibraryStore {
         return (Self.dedupe(points), Self.dedupe(wpts), problems)
     }
 
+    // MARK: Track files
+
+    /// Tracks imported from files or recorded on a phone: one track (or a set of waypoints) per
+    /// file in `tracks/`, in the PointsFile format. Names start with `import-` or `phone-`.
+    var tracksDir: URL { dir.appending(path: "tracks", directoryHint: .isDirectory) }
+
+    struct TrackFile {
+        let url: URL
+        let track: [LogPoint]
+        let waypoints: [LogPoint]
+        var isPhone: Bool { url.lastPathComponent.hasPrefix("phone-") }
+    }
+
+    func loadFiles() -> [TrackFile] {
+        let urls = (try? FileManager.default.contentsOfDirectory(at: tracksDir, includingPropertiesForKeys: nil)) ?? []
+        return urls.filter { $0.pathExtension == "csv" }.sorted { $0.lastPathComponent < $1.lastPathComponent }.compactMap { u in
+            guard let text = try? String(contentsOf: u, encoding: .utf8) else { return nil }
+            let (t, w) = PointsFile.decode(text)
+            return TrackFile(url: u, track: t, waypoints: w)
+        }
+    }
+
+    /// Writes one file; returns its URL.
+    @discardableResult
+    func addFile(track: [LogPoint] = [], waypoints: [LogPoint] = []) throws -> URL {
+        try FileManager.default.createDirectory(at: tracksDir, withIntermediateDirectories: true)
+        let first = (track.first ?? waypoints.first)?.utc ?? 0
+        let tag = UUID().uuidString.prefix(8).lowercased()
+        let url = tracksDir.appending(path: "import-\(first)-\(tag).csv")
+        try Data(PointsFile.encode(track: track, waypoints: waypoints).utf8).write(to: url, options: .atomic)
+        return url
+    }
+
     static func dedupe(_ pts: [LogPoint]) -> [LogPoint] {
         struct Key: Hashable { let t: Int64; let lat: Double; let lon: Double }
         var seen = Set<Key>()

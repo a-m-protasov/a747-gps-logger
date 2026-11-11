@@ -3,6 +3,7 @@ package io.github.a_m_protasov.a747.ui
 import android.bluetooth.BluetoothDevice
 import android.content.Intent
 import android.provider.DocumentsContract
+import android.provider.OpenableColumns
 import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -29,11 +30,18 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.FiberManualRecord
+import androidx.compose.material.icons.filled.FileOpen
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Info
@@ -52,6 +60,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -88,6 +98,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
@@ -99,15 +110,19 @@ import io.github.a_m_protasov.a747.DeviceState
 import io.github.a_m_protasov.a747.Item
 import io.github.a_m_protasov.a747.Link
 import io.github.a_m_protasov.a747.R
+import io.github.a_m_protasov.a747.Source
 import io.github.a_m_protasov.a747.Track
 import io.github.a_m_protasov.a747.Waypoint
 import io.github.a_m_protasov.a747.core.DeviceInfo
 import io.github.a_m_protasov.a747.device.DownloadService
+import io.github.a_m_protasov.a747.device.RecordControlActivity
+import io.github.a_m_protasov.a747.device.RecordService
 import java.io.File
 
 private enum class Tab(val title: Int, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     DEVICE(R.string.device, Icons.Filled.SatelliteAlt),
     TRACKS(R.string.tracks, Icons.Filled.Route),
+    MAP(R.string.map, Icons.Filled.Map),
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -150,8 +165,11 @@ fun A747Root(
                 title = { Text(stringResource(tab.title)) },
                 actions = {
                     when (tab) {
-                        Tab.TRACKS -> if (items.isNotEmpty()) ExportMenu(items)
-                        Tab.DEVICE -> {}
+                        Tab.TRACKS -> {
+                            ImportButton()
+                            if (items.isNotEmpty()) ExportMenu(items)
+                        }
+                        Tab.DEVICE, Tab.MAP -> {}
                     }
                     IconButton(onClick = { settings = true }) { Icon(Icons.Filled.Settings, stringResource(R.string.settings)) }
                 },
@@ -178,6 +196,7 @@ fun A747Root(
             when (tab) {
                 Tab.DEVICE -> DeviceScreen(onConnectUsb, pairedDevices, onConnectBluetooth)
                 Tab.TRACKS -> LibraryScreen(items) { openItem = it.key }
+                Tab.MAP -> MapScreen(items)
             }
         }
     }
@@ -398,8 +417,31 @@ private fun LibraryScreen(items: List<Item>, onOpen: (Item) -> Unit) {
     deleting?.let { DeleteDialog(it, onDone = { deleting = null }) }
 }
 
+private fun sourceIcon(s: Source) = when (s) {
+    Source.LOGGER -> Icons.Filled.Route
+    Source.IMPORTED -> Icons.Filled.Description
+    Source.PHONE -> Icons.Filled.PhoneAndroid
+}
+
+/** Picks GPX, KML, CSV, NMEA or .bin files and adds them to the library. */
 @Composable
-private fun ItemRow(i: Item, modifier: Modifier) {
+private fun ImportButton() {
+    val ctx = LocalContext.current
+    val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        if (uris.isEmpty()) return@rememberLauncherForActivityResult
+        val files = uris.mapNotNull { uri ->
+            val name = ctx.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
+                if (c.moveToFirst()) c.getString(0) else null
+            } ?: uri.lastPathSegment ?: ""
+            runCatching { ctx.contentResolver.openInputStream(uri)?.use { it.readBytes() } }.getOrNull()?.let { name to it }
+        }
+        A747App.repo.importFiles(files)
+    }
+    IconButton(onClick = { pick.launch(arrayOf("*/*")) }) { Icon(Icons.Filled.FileOpen, stringResource(R.string.import_files)) }
+}
+
+@Composable
+private fun ItemRow(i: Item, modifier: Modifier, trailing: (@Composable () -> Unit)? = null) {
     val (title, sub) = when (i) {
         is Track -> {
             val span = "${UI.time(i.stats.startUtc, i.zone)} – ${UI.time(i.stats.endUtc, i.zone)}"
@@ -415,10 +457,11 @@ private fun ItemRow(i: Item, modifier: Modifier) {
     ListItem(
         modifier = modifier,
         leadingContent = {
-            if (i is Track) Dot(Icons.Filled.Route, MaterialTheme.colorScheme.primary) else Dot(Icons.Filled.Place, WaypointColor)
+            if (i is Track) Dot(sourceIcon(i.source), MaterialTheme.colorScheme.primary) else Dot(Icons.Filled.Place, WaypointColor)
         },
         headlineContent = { Text(title, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         supportingContent = { Text(sub, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        trailingContent = trailing,
     )
 }
 
@@ -479,6 +522,78 @@ private fun Empty(icon: androidx.compose.ui.graphics.vector.ImageVector, title: 
         Spacer(Modifier.height(12.dp))
         Text(stringResource(title), style = MaterialTheme.typography.titleLarge)
         Text(stringResource(text), color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+// MARK: Map
+
+/** Any number of tracks and waypoints on one map, chosen with the checkboxes under it. */
+@Composable
+private fun MapScreen(items: List<Item>) {
+    val repo = A747App.repo
+    var shown by remember { mutableStateOf(repo.mapShown) }
+    fun show(v: Set<String>) { shown = v; repo.mapShown = v }
+    val tracks = remember(items, shown) { items.filterIsInstance<Track>().filter { it.mapKey in shown }.map { it.points } }
+    val wpts = remember(items, shown) { items.filterIsInstance<Waypoint>().filter { it.mapKey in shown } }
+    Column(Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxWidth().weight(2f)) {
+            MapWeb(tracks, wpts, Modifier.fillMaxSize())
+            RecordButton(Modifier.align(Alignment.BottomStart).padding(12.dp))
+        }
+        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                if (shown.isEmpty() || (tracks.isEmpty() && wpts.isEmpty())) stringResource(R.string.choose_tracks_and_waypoints_below_to_show_them_o) else "",
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f).padding(start = 8.dp),
+            )
+            TextButton(onClick = { show(items.map { it.mapKey }.toSet()) }, enabled = items.isNotEmpty()) { Text(stringResource(R.string.show_all)) }
+            TextButton(onClick = { show(emptySet()) }, enabled = shown.isNotEmpty()) { Text(stringResource(R.string.hide_all)) }
+        }
+        HorizontalDivider()
+        LazyColumn(Modifier.fillMaxWidth().weight(1f)) {
+            for ((day, list) in items.groupBy { it.day }) {
+                item(key = "d$day") {
+                    Text(UI.day(day), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                }
+                items(list, key = { it.key }) { i ->
+                    val on = i.mapKey in shown
+                    fun toggle() = show(if (on) shown - i.mapKey else shown + i.mapKey)
+                    ItemRow(i, Modifier.clickable { toggle() }) { Checkbox(on, onCheckedChange = { toggle() }) }
+                }
+            }
+        }
+    }
+}
+
+/** Starts recording a track with this phone's GPS (asking for location access first), or stops it. */
+@Composable
+private fun RecordButton(modifier: Modifier) {
+    val ctx = LocalContext.current
+    val rec by A747App.repo.recording.collectAsStateWithLifecycle()
+    val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        if (RecordService.hasPermission(ctx)) RecordService.start(ctx)
+        else A747App.repo.message.value = ctx.getString(R.string.location_access_is_needed_to_record_a_track)
+    }
+    val r = rec
+    if (r == null) {
+        ExtendedFloatingActionButton(
+            onClick = { if (RecordService.hasPermission(ctx)) RecordService.start(ctx) else ask.launch(RecordService.permissions) },
+            icon = { Icon(Icons.Filled.FiberManualRecord, null, tint = Color(0xFFE5484D)) },
+            text = { Text(stringResource(R.string.record_a_track)) },
+            modifier = modifier,
+        )
+    } else {
+        ExtendedFloatingActionButton(
+            onClick = { RecordService.stop(ctx) },
+            icon = { Icon(Icons.Filled.Stop, null) },
+            text = {
+                Text(if (r.points == 0) stringResource(R.string.waiting_for_gps)
+                else "${UI.distance(r.distanceM)} · ${r.points}")
+            },
+            containerColor = Color(0xFFE5484D), contentColor = Color.White,
+            modifier = modifier,
+        )
     }
 }
 
@@ -693,6 +808,7 @@ private fun SettingsScreen(onBack: () -> Unit) {
     var showWpts by remember { mutableStateOf(repo.showWaypointsOnTrack) }
     var bySpeed by remember { mutableStateOf(repo.trackColorBySpeed) }
     var color by remember { mutableStateOf(repo.trackColor) }
+    var interval by remember { mutableIntStateOf(repo.recordIntervalS) }
     val ctx = LocalContext.current
     Scaffold(topBar = {
         TopAppBar(title = { Text(stringResource(R.string.settings)) },
@@ -738,6 +854,28 @@ private fun SettingsScreen(onBack: () -> Unit) {
             ListItem(
                 headlineContent = { Text(stringResource(R.string.show_waypoints_on_track_maps)) },
                 trailingContent = { Switch(showWpts, onCheckedChange = { showWpts = it; repo.showWaypointsOnTrack = it }) },
+            )
+            HorizontalDivider()
+            Text(stringResource(R.string.recording_on_this_phone), style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(16.dp, 16.dp, 16.dp, 4.dp))
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.a_point_every_n_s, interval)) },
+                supportingContent = {
+                    androidx.compose.material3.Slider(value = interval.toFloat(), onValueChange = { interval = it.toInt() },
+                        onValueChangeFinished = { repo.recordIntervalS = interval }, valueRange = 1f..60f)
+                },
+            )
+            ListItem(
+                headlineContent = {
+                    Text(stringResource(R.string.tasker_and_other_apps_can_start_and_stop_recordi), style = MaterialTheme.typography.bodyMedium)
+                },
+                supportingContent = {
+                    SelectionContainer {
+                        Text(listOf(RecordControlActivity.ACTION_START, RecordControlActivity.ACTION_STOP, RecordControlActivity.ACTION_TOGGLE)
+                            .joinToString("\n"), fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 6.dp))
+                    }
+                },
             )
             HorizontalDivider()
             ListItem(headlineContent = { Text(stringResource(R.string.project_page)) },
