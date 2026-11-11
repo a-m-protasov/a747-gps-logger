@@ -46,6 +46,8 @@ jobs:
       - name: Draft release
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
+          # also without the version in the name, so the README can link releases/latest/download/…
+          for f in *.dmg *.apk; do cp "$f" "A747-GPS-Logger.${f##*.}"; done
           shasum -a 256 *.dmg *.apk > SHA256SUMS.txt
           if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$GITHUB_REF_NAME" *.dmg *.apk SHA256SUMS.txt --repo "$GITHUB_REPOSITORY" --clobber

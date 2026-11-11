@@ -102,11 +102,13 @@ Settings on the logger (log format, intervals) are shown but not changed in this
 
 ## Install
 
-Download from [Releases](../../releases).
+**[Download for macOS (DMG)](https://github.com/a-m-protasov/a747-gps-logger/releases/latest/download/A747-GPS-Logger.dmg)** ·
+**[Download for Android (APK)](https://github.com/a-m-protasov/a747-gps-logger/releases/latest/download/A747-GPS-Logger.apk)** — always the latest release.
+Older versions, release notes and SHA-256 checksums are on the [Releases](../../releases) page.
 
 ### macOS 14 or newer
 
-1. Open `A747-GPS-Logger-<version>.dmg` and drag the app to Applications.
+1. Download [A747-GPS-Logger.dmg](https://github.com/a-m-protasov/a747-gps-logger/releases/latest/download/A747-GPS-Logger.dmg), open it and drag the app to Applications.
 2. The app is not notarized (that needs a paid Apple developer account), so macOS blocks the
    first launch. Open it once, then go to **System Settings → Privacy & Security** and click
    **Open Anyway**. Or run:
@@ -120,7 +122,7 @@ Download from [Releases](../../releases).
 
 ### Android 8 or newer
 
-1. Download `A747-GPS-Logger-<version>.apk` on the phone and install it (allow installing from
+1. Download [A747-GPS-Logger.apk](https://github.com/a-m-protasov/a747-gps-logger/releases/latest/download/A747-GPS-Logger.apk) on the phone and install it (allow installing from
    your browser or file manager when asked).
 2. **USB**: connect the logger with a USB OTG adapter. Android offers to open the app; allow
    access to the device.
