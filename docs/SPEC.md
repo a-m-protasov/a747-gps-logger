@@ -91,7 +91,7 @@ selected the right side shows the device.
   and `center()` in map.html; Android can jump to the phone's location), timed at the moment
   they are added and stored in `tracks/added-waypoints.csv`. Name and icon are edits keyed by
   the waypoint's UTC time (`icons` in edits.json), so any waypoint, also one from the logger,
-  can have an icon. Icons are 30 emoji, the same list on both platforms (`WaypointIcons`);
+  can have an icon. Icons are 51 emoji, the same list on both platforms (`WaypointIcons`);
   the map draws them in a ringed marker.
 - **Map screen** (Android): a full-screen map; the Tracks button opens a sheet
   where tracks and waypoints are ticked to be shown together; the choice is remembered.
@@ -114,7 +114,8 @@ selected the right side shows the device.
 ### Settings
 - Track split gap, units (from system region, overridable), map layer for waypoints,
   phone recording interval (Android).
-- Appearance: as in the system, light or dark; the map page follows it (`setTheme`).
+- Appearance: as in the system, light or dark. The map itself stays light (the dark style
+  hides too much detail).
 - Language: as in the system or one of the app's languages. Android 13+ keeps it per app
   (`LocaleManager`, also in the system's app settings), older versions apply it to each
   context; macOS writes `AppleLanguages` and offers to restart.
@@ -132,7 +133,8 @@ corrections from native speakers welcome.
 - `github.com/a-m-protasov/a747-gps-logger`, MIT. Private until v1.0, then public after a
   full history check for personal data.
 - Layout: `android/`, `macos/`, `docs/`, `fixtures/`, `tools/`.
-- No real tracks, dumps or personal locations in the repo, screenshots or fixtures.
+- No real tracks, dumps or personal locations in the repo or fixtures. The README pictures
+  show one real track (Palić – Subotica), chosen for them on purpose.
   `.gitignore` blocks `*.gpx`/`*.kml`/`*.bin` outside `fixtures/`.
 - GitHub Actions on tag `v*`: signed APK + DMG in Releases. The DMG is ad-hoc signed (not
   notarized); the README explains how to open it.

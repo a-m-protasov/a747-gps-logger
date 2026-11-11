@@ -63,9 +63,10 @@ struct MapView: NSViewRepresentable {
             return o
         }
         let metric = UI.units.isMetric
-        let mf = MeasurementFormatter()
-        mf.unitStyle = .short
-        let unit = mf.string(from: metric ? UnitSpeed.kilometersPerHour : UnitSpeed.milesPerHour)
+        // the unit as the stats write it next to a number ("km/h"; the formatter's unit names are "km/hr")
+        let unit = Measurement(value: 0, unit: metric ? UnitSpeed.kilometersPerHour : UnitSpeed.milesPerHour)
+            .formatted(.measurement(width: .abbreviated, usage: .asProvided))
+            .components(separatedBy: .decimalDigits).joined().trimmingCharacters(in: .whitespaces)
         let style: [String: Any] = ["mode": bySpeed ? "speed" : "solid",
                                     "color": trackColor,
                                     "unit": unit, "factor": metric ? 1 : 1 / 1.609344]

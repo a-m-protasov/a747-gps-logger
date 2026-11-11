@@ -9,8 +9,7 @@ Read its memory, see your tracks on a map, export GPX / KML / CSV.<br>
 </p>
 
 <p align="center">
-<img src="docs/images/mac-tracks.png" width="640" alt="Tracks on macOS">
-<img src="docs/images/android-track.png" width="200" alt="A track on Android">
+<img src="docs/images/hero.png" width="860" alt="A track on macOS and on Android">
 </p>
 
 > Not affiliated with TranSystem Inc. "i-Blue" and "747A+" are used only to say which device
@@ -18,6 +17,8 @@ Read its memory, see your tracks on a map, export GPX / KML / CSV.<br>
 > real device.
 
 ## Why
+
+<img src="docs/images/logger-photo.jpg" width="220" align="right" alt="The i-Blue 747A+ logger">
 
 The 747A+ is a pocket GPS logger sold around 2008–2012. It still works well: it logs for
 days, has a button to mark places, and talks NMEA over USB and Bluetooth. The software around
@@ -46,8 +47,6 @@ These apps fix all of that and give you the tracks in common formats.
 | Controls | Power / NAV / LOG switch; one button that stores a waypoint |
 | Battery | Built-in, rechargeable over USB. **Its level is not available over the protocol.** |
 
-<p align="center"><img src="docs/images/logger-photo.jpg" width="280" alt="The logger"></p>
-
 ### Quirks the apps handle
 
 - **Week rollover.** Timestamps are 1024 weeks old; they are corrected automatically.
@@ -74,7 +73,7 @@ These apps fix all of that and give you the tracks in common formats.
   by speed (slowest red, fastest green) or in one colour of your choice.
 - **Waypoints**: places marked with the button, listed together with the tracks; opening one
   zooms the map to it. Add your own: move the map under a cross (on Android also to where the
-  phone is), give it a name and one of 30 icons. Any waypoint can get an icon, shown in the
+  phone is), give it a name and one of 51 icons. Any waypoint can get an icon, shown in the
   list and on the maps.
 - **Rename and delete** tracks and waypoints. The raw downloads are kept as they are, and a
   deleted item does not come back with the next download.
@@ -98,13 +97,7 @@ These apps fix all of that and give you the tracks in common formats.
 Settings on the logger (log format, intervals) are shown but not changed in this version.
 
 <p align="center">
-<img src="docs/images/mac-add-waypoint.png" width="420" alt="Adding a waypoint on macOS">
-<img src="docs/images/android-map.png" width="190" alt="Tracks and waypoints with icons on the Android map">
-<img src="docs/images/android-list.png" width="190" alt="Tracks and waypoints on Android">
-</p>
-
-<p align="center">
-<img src="docs/images/mac-device.png" width="420" alt="Device screen on macOS">
+<img src="docs/images/waypoints.png" width="860" alt="Adding a waypoint with an icon on macOS and on Android">
 </p>
 
 ## Install

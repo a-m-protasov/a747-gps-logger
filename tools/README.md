@@ -18,3 +18,5 @@ Other tools:
 - `build_tz.py` — rebuilds `shared/timezones.bin` from timezone-boundary-builder (needs shapely).
 - `i18n/build.py` — checks translations and writes `shared/i18n/*.json` and the Xcode string catalog.
 - `i18n/android.py` — writes Android `strings.xml` for all languages from `shared/i18n`.
+- `compose_screenshots.py` — lays raw Mac and Android screenshots out as the README pictures
+  (`docs/images/hero.png`, `waypoints.png`): window shadows, phone frames (needs Pillow).

@@ -56,9 +56,6 @@ import java.util.Locale
 val Brand = Color(0xFF1F8A70)
 val WaypointColor = Color(0xFFF2994A)
 
-/** Whether the app shows its dark theme (chosen in Settings, or the system's). */
-val LocalDark = androidx.compose.runtime.staticCompositionLocalOf { false }
-
 @Composable
 fun A747Theme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     // brand green on neutral surfaces (the macOS app uses the same palette)
@@ -75,9 +72,7 @@ fun A747Theme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> 
         background = Color(0xFFFCFCFC), surface = Color(0xFFFCFCFC), surfaceContainer = Color(0xFFF2F3F3),
         surfaceContainerLow = Color(0xFFF6F7F7), surfaceContainerHigh = Color(0xFFECEDED),
     )
-    androidx.compose.runtime.CompositionLocalProvider(LocalDark provides dark) {
-        MaterialTheme(colorScheme = scheme, content = content)
-    }
+    MaterialTheme(colorScheme = scheme, content = content)
 }
 
 @Composable
@@ -178,7 +173,6 @@ fun MapWeb(tracks: List<List<LogPoint>>, waypoints: List<Waypoint>, modifier: Mo
            /** Room kept free at the bottom when the map fits the data, in dp. */
            bottomInset: Int = 0) {
     val repo = A747App.repo
-    val theme = if (LocalDark.current) "dark" else "light"
     val metric = UI.isMetric
     val bySpeed = repo.trackColorBySpeed
     val color = repo.trackColor
@@ -235,14 +229,12 @@ fun MapWeb(tracks: List<List<LogPoint>>, waypoints: List<Waypoint>, modifier: Mo
                     }
                 }
                 controller?.web = this
-                setTag(MapBridge.THEME_SENT, theme)
-                loadUrl("file:///android_asset/map.html?theme=$theme")
+                loadUrl("file:///android_asset/map.html")
             }
         },
         update = { web ->
             controller?.web = web
             web.tag = data
-            web.setTag(MapBridge.THEME, theme)
             web.setTag(MapBridge.PICKING, picking)
             if (web.getTag(MapBridge.LOADED) == true) sendState(web)
             // send only new data: setData fits the view to the data and would undo the user's pan and zoom
@@ -254,13 +246,8 @@ fun MapWeb(tracks: List<List<LogPoint>>, waypoints: List<Waypoint>, modifier: Mo
     )
 }
 
-/** Theme and the picking cross, sent when they change. */
+/** The picking cross, sent when it changes. */
 private fun sendState(web: WebView) {
-    val theme = web.getTag(MapBridge.THEME) as? String
-    if (theme != null && web.getTag(MapBridge.THEME_SENT) != theme) {
-        web.evaluateJavascript("window.setTheme('$theme')", null)
-        web.setTag(MapBridge.THEME_SENT, theme)
-    }
     val picking = web.getTag(MapBridge.PICKING) == true
     if (web.getTag(MapBridge.PICKING_SENT) != picking) {
         web.evaluateJavascript("window.setPicking($picking)", null)
@@ -271,8 +258,6 @@ private fun sendState(web: WebView) {
 object MapBridge {
     val LOADED = io.github.a_m_protasov.a747.R.id.map_loaded
     val SENT = io.github.a_m_protasov.a747.R.id.map_sent
-    val THEME = io.github.a_m_protasov.a747.R.id.map_theme
-    val THEME_SENT = io.github.a_m_protasov.a747.R.id.map_theme_sent
     val PICKING = io.github.a_m_protasov.a747.R.id.map_picking
     val PICKING_SENT = io.github.a_m_protasov.a747.R.id.map_picking_sent
 }

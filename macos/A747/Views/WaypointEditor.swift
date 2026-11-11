@@ -22,7 +22,7 @@ struct WaypointEditor: View {
             Text(editing == nil ? "Add waypoint" : "Edit waypoint").font(.headline)
             if editing == nil {
                 MapView(tracks: tracks, waypoints: waypoints, picker: picker)
-                    .frame(height: 260)
+                    .frame(height: 220)
                     .clipShape(.rect(cornerRadius: 8))
                 Text("Move the map so that the cross is on the place.")
                     .font(.callout).foregroundStyle(.secondary)
@@ -62,7 +62,7 @@ struct IconGrid: View {
     @Binding var selection: String?
 
     var body: some View {
-        LazyVGrid(columns: Array(repeating: GridItem(.fixed(34), spacing: 6), count: 12), spacing: 6) {
+        LazyVGrid(columns: Array(repeating: GridItem(.fixed(34), spacing: 6), count: 13), spacing: 6) {
             cell(nil) {
                 Circle().fill(Color.accentWaypoint).frame(width: 12, height: 12)
                     .overlay(Circle().stroke(.white, lineWidth: 2))

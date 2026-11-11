@@ -41,9 +41,12 @@ struct Waypoint: Identifiable, Hashable {
 /// Icons a waypoint can have (the same list as on Android). Emoji look the same on the map
 /// page and in the lists, and need no artwork.
 enum WaypointIcons {
-    static let all = ["⭐", "❤️", "🚩", "⚠️", "🏠", "🏢", "🏨", "⛺", "🍴", "☕", "🍺", "🛒",
-                      "⛽", "🅿️", "🚗", "🚲", "🚶", "🚌", "⚓", "✈️", "📷", "🏔️", "🌲", "🏖️",
-                      "💧", "🏛️", "⛪", "🏥", "🎯", "💡"]
+    static let all = ["⭐", "❤️", "🚩", "⚠️", "🎯", "💡",
+                      "🏠", "🏢", "🏨", "⛺", "🏛️", "⛪", "🏰", "🏥",
+                      "🍴", "☕", "🍺", "🍷", "🍕", "🍦", "🥐",
+                      "🛒", "🛍️", "🏪", "💊", "🏦", "📮",
+                      "⛽", "🔌", "🅿️", "🚗", "🚲", "🚶", "🚌", "🚉", "⚓", "✈️",
+                      "📷", "🏔️", "🌲", "🏖️", "💧", "🌊", "🌻", "🐾", "🏊", "⛷️", "🎭", "🎡", "🏟️", "🌉"]
 }
 
 /// A row of the library list: tracks and waypoints together, newest first.
