@@ -191,6 +191,11 @@ def parse_image(image: bytes, flash_id: int, write_addr: int, now: int) -> Parse
     return res
 
 
+JUMP_M = 200          # a jump: farther than this…
+JUMP_KMH = 1000       # …and faster than this between two consecutive points
+JUMP_MIN_POINTS = 30  # pieces between jumps shorter than this are dropped
+
+
 def split_tracks(points: list[Point], gap_s: int = 1800) -> list[list[Point]]:
     tracks: list[list[Point]] = []
     for p in points:
@@ -198,7 +203,35 @@ def split_tracks(points: list[Point], gap_s: int = 1800) -> list[list[Point]]:
             tracks[-1].append(p)
         else:
             tracks.append([p])
-    return tracks
+    return [t for t in (drop_jumps(t) for t in tracks) if t]
+
+
+def is_jump(a: Point, b: Point) -> bool:
+    d = haversine(a, b)
+    return d > JUMP_M and d / max(b.utc - a.utc, 1) * 3.6 > JUMP_KMH
+
+
+def drop_jumps(track: list[Point]) -> list[Point]:
+    """§4.4: GPS glitches (a cold start far off, a single wild fix) are cut out at their jumps."""
+    chains: list[list[Point]] = []  # pieces joined where no jump separates them
+    chain_of: list[int] = []        # chain index of each point
+    for i, p in enumerate(track):
+        if i and not is_jump(track[i - 1], p):
+            c = chain_of[-1]
+        else:
+            # after a jump: back to the latest chain it continues, or a new one
+            c = next((k for k in range(len(chains) - 1, -1, -1) if not is_jump(chains[k][-1], p)), None) if i else None
+            if c is None:
+                chains.append([])
+                c = len(chains) - 1
+        chains[c].append(p)
+        chain_of.append(c)
+    if len(chains) <= 1:
+        return track
+    keep = {k for k, ch in enumerate(chains) if len(ch) >= JUMP_MIN_POINTS}
+    if not keep:
+        keep = {max(range(len(chains)), key=lambda k: len(chains[k]))}  # the first of the longest
+    return [p for p, c in zip(track, chain_of) if c in keep]
 
 
 def haversine(a: Point, b: Point) -> float:

@@ -25,7 +25,42 @@ public enum Tracks {
                 tracks.append([p])
             }
         }
-        return tracks
+        return tracks.map(dropJumps).filter { !$0.isEmpty }
+    }
+
+    /// A jump: farther than `jumpM` and faster than `jumpKmh` between two consecutive points.
+    public static let jumpM = 200.0, jumpKmh = 1000.0
+    /// Pieces between jumps shorter than this are dropped.
+    public static let jumpMinPoints = 30
+
+    /// §4.4: GPS glitches (a cold start far off, a single wild fix) are cut out at their jumps.
+    public static func isJump(_ a: LogPoint, _ b: LogPoint) -> Bool {
+        let d = haversine(a, b)
+        return d > jumpM && d / Double(max(b.utc - a.utc, 1)) * 3.6 > jumpKmh
+    }
+
+    public static func dropJumps(_ track: [LogPoint]) -> [LogPoint] {
+        var chains: [[LogPoint]] = []  // pieces joined where no jump separates them
+        var chainOf: [Int] = []        // chain index of each point
+        for (i, p) in track.enumerated() {
+            var c: Int?
+            if i > 0 && !isJump(track[i - 1], p) {
+                c = chainOf[i - 1]
+            } else if i > 0 {
+                // after a jump: back to the latest chain it continues, or a new one
+                c = chains.indices.reversed().first { !isJump(chains[$0].last!, p) }
+            }
+            if c == nil { chains.append([]); c = chains.count - 1 }
+            chains[c!].append(p)
+            chainOf.append(c!)
+        }
+        if chains.count <= 1 { return track }
+        var keep = Set(chains.indices.filter { chains[$0].count >= jumpMinPoints })
+        if keep.isEmpty {
+            // the first of the longest
+            keep = [chains.indices.reduce(0) { chains[$1].count > chains[$0].count ? $1 : $0 }]
+        }
+        return zip(track, chainOf).filter { keep.contains($0.1) }.map(\.0)
     }
 
     public static let earthRadius = 6_371_008.8

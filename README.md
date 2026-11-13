@@ -68,7 +68,8 @@ These apps fix all of that and give you the tracks in common formats.
 - **Download and erase**: erases only after the download is saved and verified, asks twice,
   then switches logging back on and checks it.
 - **Tracks**: the log is split into trips at pauses longer than 30 min (adjustable) and grouped
-  by day in the **local time of the place** the track was recorded. Each track has a map,
+  by day in the **local time of the place** the track was recorded. GPS glitches — a cold start that
+  logs its first fixes far away, a single wild fix — are cut out automatically. Each track has a map,
   distance, durations, speeds, ascent/descent and speed/elevation charts. The track is coloured
   by speed (slowest red, fastest green) or in one colour of your choice.
 - **Waypoints**: places marked with the button, listed together with the tracks; opening one

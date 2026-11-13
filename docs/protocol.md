@@ -231,6 +231,15 @@ after this is reported as invalid and the point is dropped.
 A new track starts when the gap between two consecutive track points exceeds the split gap
 (default 30 min, setting 5–240 min). Waypoints do not split tracks.
 
+GPS jumps are then cut out of each track. A *jump* is a step between two consecutive points
+longer than 200 m and faster than 1000 km/h (time difference taken as at least 1 s). Points are
+grouped into *chains*: a point joins the chain of the point before it unless a jump separates
+them; after a jump it joins the latest chain whose last point it does not jump from, or starts
+a new chain. Chains with fewer than 30 points are dropped (if all are that short, the longest
+is kept, the first of equals). This removes a cold start that logs a few fixes far from the
+real place, and single wild fixes (the track continues on its chain after them), while slow
+travel and gaps are left alone.
+
 Track identity (for duplicate detection in the library): `"<first UTC epoch>-<point count>"`.
 A track that grows (incremental download continued it) replaces the shorter one with the
 same first point.

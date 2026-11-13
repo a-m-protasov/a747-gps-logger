@@ -33,7 +33,38 @@ object Tracks {
             val last = tracks.lastOrNull()?.lastOrNull()
             if (last != null && p.utc - last.utc <= gapSeconds) tracks.last().add(p) else tracks.add(arrayListOf(p))
         }
-        return tracks
+        return tracks.map(::dropJumps).filter { it.isNotEmpty() }
+    }
+
+    /** A jump: farther than [JUMP_M] and faster than [JUMP_KMH] between two consecutive points. */
+    const val JUMP_M = 200.0
+    const val JUMP_KMH = 1000.0
+    /** Pieces between jumps shorter than this are dropped. */
+    const val JUMP_MIN_POINTS = 30
+
+    /** §4.4: GPS glitches (a cold start far off, a single wild fix) are cut out at their jumps. */
+    fun isJump(a: LogPoint, b: LogPoint): Boolean {
+        val d = haversine(a, b)
+        return d > JUMP_M && d / maxOf(b.utc - a.utc, 1L) * 3.6 > JUMP_KMH
+    }
+
+    fun dropJumps(track: List<LogPoint>): List<LogPoint> {
+        val chains = ArrayList<ArrayList<LogPoint>>()  // pieces joined where no jump separates them
+        val chainOf = ArrayList<Int>()                 // chain index of each point
+        for ((i, p) in track.withIndex()) {
+            var c: Int? = null
+            if (i > 0 && !isJump(track[i - 1], p)) c = chainOf[i - 1]
+            // after a jump: back to the latest chain it continues, or a new one
+            else if (i > 0) c = chains.indices.reversed().firstOrNull { !isJump(chains[it].last(), p) }
+            if (c == null) { chains.add(ArrayList()); c = chains.size - 1 }
+            chains[c].add(p)
+            chainOf.add(c)
+        }
+        if (chains.size <= 1) return track
+        // otherwise the first of the longest
+        val keep = chains.indices.filter { chains[it].size >= JUMP_MIN_POINTS }.toSet()
+            .ifEmpty { setOf(chains.indices.maxBy { chains[it].size }) }
+        return track.filterIndexed { i, _ -> chainOf[i] in keep }
     }
 
     fun haversine(a: LogPoint, b: LogPoint): Double {
