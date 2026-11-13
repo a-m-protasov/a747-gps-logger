@@ -118,7 +118,7 @@ extension Color {
 enum AppTheme: String {
     case system, light, dark
 
-    func apply() {
+    @MainActor func apply() {
         NSApp.appearance = switch self {
         case .system: nil
         case .light: NSAppearance(named: .aqua)
@@ -128,6 +128,7 @@ enum AppTheme: String {
 }
 
 /// The app's language, chosen in Settings (macOS reads it at launch from AppleLanguages).
+@MainActor
 enum AppLanguage {
     static var all: [String] {
         Bundle.main.localizations.filter { $0 != "Base" }.sorted { name($0).localizedCompare(name($1)) == .orderedAscending }
@@ -148,7 +149,7 @@ enum AppLanguage {
         let cfg = NSWorkspace.OpenConfiguration()
         cfg.createsNewApplicationInstance = true
         NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: cfg) { _, _ in
-            DispatchQueue.main.async { NSApp.terminate(nil) }
+            Task { @MainActor in NSApp.terminate(nil) }
         }
     }
 }
